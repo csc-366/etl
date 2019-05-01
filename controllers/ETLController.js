@@ -1,11 +1,10 @@
 import {parse} from "../utils/csv";
 import fs from 'fs';
+import {sendData, sendError} from "../utils/responseHelper";
 
 export async function etlIngest(req, res) {
     if (!req.file.path) {
-        res.status(400).json({
-            message: "Could not find file."
-        });
+        sendError(res, 400, "Could not find file.");
         return
     }
 
@@ -14,13 +13,9 @@ export async function etlIngest(req, res) {
     try {
         let data = parse(filename);
 
-        res.status(200).json({
-            data
-        });
+        sendData("res", data);
     } catch (e) {
-        res.status(500).json({
-            message: "Error parsing data."
-        })
+        sendError(res, 500, "Error parsing data.");
     }
 
     await fs.unlink(`./${filename}`);
