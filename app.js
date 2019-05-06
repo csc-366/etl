@@ -6,6 +6,7 @@ import logger from 'morgan';
 import indexRouter from './routes/index';
 import usersRouter from './routes/users';
 import etlRouter from './routes/etl';
+import observationRouter from './routes/observations';
 
 let app = express();
 
@@ -18,5 +19,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/etl', etlRouter);
+app.use('/obs', observationRouter);
 
 module.exports = app;
