@@ -1,16 +1,29 @@
 import mysql from 'mysql';
+import 'dotenv/config';
+import * as util from 'util';
 
-let pool = mysql.createPool({
+import * as l from './location';
+import * as m from './mark';
+import * as o from './observation';
+import * as t from './tag';
+import * as u from './user';
+
+const {DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE} = process.env;
+
+const pool = mysql.createPool({
     connectionLimit: 10,
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_DATABASE
 });
 
-export const query = pool.query;
+export const query = util.promisify(pool.query).bind(pool);
+export const format = mysql.format;
 
-export async function insert(data) {
-    insertObserver(data);
-    insertObservation(data);
+export async function ingest(data) {
+    data.forEach(async (observation) => {
+        const observation = await o.ingestObservation(observation);
+        const tags = await t.ingestTags(observation)
+    });
 }
