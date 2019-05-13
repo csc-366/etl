@@ -56,16 +56,21 @@ export const ingestTag = async ({number, color, position}) => {
        }
     }
     const q = format("INSERT INTO Tag (Number, Color, Position) VALUES (?,?,?)", [number, color, position]);
-    const result = await query(q);
     return (await connection.query("SELECT LAST_INSERT_ID() as ID"))[0][0].ID;
 };
 
-export const ingestTagDeployments = async (deployments) => {
-    const insertValues = deployments.map(({observationId, tagNumber}) => [observationId, tagNumber]);
-    query("INSERT INTO TagDeployment (ObservationId, TagNumber) VALUES ?", insertValues);
+export const ingestTagDeployments = async (connection, observationId, tags) => {
+    for (let i = 0; i < tags.length; i++) {
+        const {id} = tags[i];
+        const q = format("INSERT INTO TagDeployment (ObservationId, TagNumber) VALUES (?,?)", [observationId,id]);
+        await connection.query(q);
+    }
 };
 
-export const ingestTagObservations = async (observations) => {
-    const insertValues = observations.map(({observationId, tagNumber}) => [observationId, tagNumber]);
-    query("INSERT INTO TagObservation (ObservationId, TagNumber) VALUES ?", insertValues)
+export const ingestTagObservations = async (connection, observationId, tags) => {
+    for (let i = 0; i < tags.length; i++) {
+        const {id} = tags[i];
+        const q = format("INSERT INTO TagDeployment (ObservationId, TagNumber) VALUES (?,?)", [observationId,id]);
+        await connection.query(q);
+    }
 };
