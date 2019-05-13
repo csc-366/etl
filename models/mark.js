@@ -5,17 +5,35 @@ export const ingestSeasons = async (seasons) => {
     query("INSERT INTO Season (Year, Start, End, Description) VALUES ?", insertValues);
 };
 
-export const ingestMarks = async (marks) => {
-    const insertValues = marks.map(({season, number, position}) => [season, number, position]);
-    query("INSERT INTO Mark (Season, Number, Position) VALUES ?", insertValues);
+export const ingestMarks = async ({year, marks, connection}) => {
+    let insertedMarks = [];
+    for (let i = 0; i < marks.length; i++) {
+        const {mark, position, isNew, markNum} = marks[i];
+        const q = format("INSERT INTO Mark (Season, Number, Position) VALUES (?,?,?)", [year, mark, position]);
+        await connection.query(q);
+        const id = (await connection.query("SELECT LAST_INSERT_ID() as id"))[0][0].id;
+
+        insertedMarks.push({
+            isNew,
+            id,
+            markNum
+        });
+    }
+    return insertedMarks
 };
 
-export const ingestMarkDeployments = async (deployments) => {
-    const insertValues = deployments.map(({observationId, markId}) => [observationId, markId]);
-    query("INSERT INTO MarkDeployment (ObservationId, MarkId) VALUES ?", insertValues);
+export const ingestMarkObservations = async (connection, observationId, marks) => {
+    for (let i = 0; i < marks.length; i++) {
+        const {id} = marks[i];
+        const q = format("INSERT INTO MarkObservation (ObservationId, MarkId) VALUES (?,?)", [observationId,id]);
+        await connection.query(q);
+    }
 };
 
-export const ingestMarkObservations = async (observations) => {
-    const insertValues = observations.map(({observationId, markId}) => [observationId, markId]);
-    query("INSERT INTO MarkObservation (ObservationId, MarkId) VALUES ?", insertValues);
+export const ingestMarkDeployments = async (connection, observationId, marks) => {
+    for (let i = 0; i < marks.length; i++) {
+        const {id} = marks[i];
+        const q = format("INSERT INTO MarkDeployment (ObservationId, MarkId) VALUES (?,?)", [observationId,id]);
+        await connection.query(q);
+    }
 };
