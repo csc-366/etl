@@ -17,8 +17,13 @@ const ingestObservers = async (observers) => {
 export const ingestObservation = async ({date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments, connection}) => {
     const q = format("INSERT INTO Observation (Date, Location, Reviewer, SubmittedBy, Observer, AgeClass, MoltPercentage, Comments) VALUES (?,?,?,?,?,?,?,?)",
         [date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments]);
-    await connection.query(q);
-    const observation =
+    const result = await connection.query(q);
+
+    return (await connection.query("SELECT LAST_INSERT_ID() as ID"))[0][0].ID;
+};
+
+const buildDateString = (date) => {
+    return `${date.getYear()}-${date.getMonth()}-${date.getDate()}`
 };
 
 const ingestObservations = async (observations) => {

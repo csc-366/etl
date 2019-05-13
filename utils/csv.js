@@ -50,7 +50,6 @@ export function parse(filename) {
             return acc
         }, {});
         observation.rowNumber = index + 1;
-        console.log(observation);
         return observation;
     });
 
@@ -59,7 +58,7 @@ export function parse(filename) {
 
         const year = row['Year'];
 
-        const date = Date.parse(row['Date']);
+        const date = jsDateToMySQLDate(new Date(row['Date']));
 
         const location = row['Loc.'];
 
@@ -220,6 +219,18 @@ const parseMeasurement = (row) => {
         massTare: row['Tare'],
         animalMass: row['Mass-Tare']
     }
+};
+
+const twoDigits = (d) => {
+    if (0 <= d && d < 10)
+        return `0${d}`;
+    if (-10 < d && d < 0)
+        return `-0${-1*d}`;
+    return d.toString();
+};
+
+export const jsDateToMySQLDate = (jsDate) => {
+    return `${jsDate.getUTCFullYear()}-${twoDigits(jsDate.getUTCMonth() + 1)}-${twoDigits(jsDate.getUTCDate())}`
 };
 
 export function dump(c) {

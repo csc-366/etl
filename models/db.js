@@ -24,7 +24,7 @@ export const format = mysql.format;
 export async function ingest(data) {
     data
         .map(async (observation) => {
-            const connection = await pool.acquireConnection();
+            const connection = await pool.getConnection();
             await connection.query("START TRANSACTION");
 
             observation = {...observation, connection};
@@ -38,6 +38,7 @@ export async function ingest(data) {
                 const newTags = tags.filter(({isNew}) => isNew);
                 const oldTags = tags.filter(({isNew}) => !isNew);
 
+                /*
                 await t.ingestTagObservations(observation, obs, oldTags);
                 await t.ingestTagDeployments(observation, obs, newTags);
 
@@ -58,6 +59,7 @@ export async function ingest(data) {
                 await o.ingestPupAge(observation, obs);
 
                 await o.ingestPupCount(observation, obs);
+                */
 
                 await connection.query("COMMIT");
                 return null;
@@ -67,7 +69,6 @@ export async function ingest(data) {
             } finally {
                 connection.release()
             }
-
         })
         .filter(observation => observation);
 }
