@@ -1,6 +1,6 @@
 import {query, format} from "./db";
 
-export const TAG_REGEX = /(W|B|G|P|V|R|Y|O)(.*)/;
+export const TAG_COLOR_REGEX = /[WBGPVRYO]/;
 
 export const ingestTagPositions = async (positions) => {
     const insertValues = positions.map(({position, nationalTagPosition}) => [position, nationalTagPosition]);
@@ -28,7 +28,9 @@ export const ingestTags = async ({tags}) => {
 };
 
 export const ingestTag = async ({number, color, position}) => {
-
+    if (!TAG_COLOR_REGEX.test(color)) {
+        throw new Error( "Bad color")
+    }
     const q = format("INSERT INTO Tag (Number, Color, Position) VALUES (?,?,?)", [number, color, position]);
     const result = await query(q)
 };
