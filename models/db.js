@@ -18,7 +18,7 @@ const pool = mysql.createPool({
     database: DB_DATABASE
 });
 
-export const query = util.promisify(pool.query).bind(pool);
+//export const query = util.promisify(pool.query).bind(pool);
 export const format = mysql.format;
 
 export async function ingest(data) {
@@ -31,40 +31,42 @@ export async function ingest(data) {
 
             try {
                 // Returns {observationId}
-                const obs = await o.ingestObservation(observation);
+                const observationId = await o.ingestObservation(observation);
 
+                /*
                 // Returns [{tagId}]
                 const tags = await t.ingestTags(observation);
                 const newTags = tags.filter(({isNew}) => isNew);
                 const oldTags = tags.filter(({isNew}) => !isNew);
 
-                /*
                 await t.ingestTagObservations(observation, obs, oldTags);
                 await t.ingestTagDeployments(observation, obs, newTags);
-
-                // Returns [{markId}]
-                const marks = await m.ingestMarks(observation);
-                const newMarks = marks.filter(({isNew}) => isNew);
-                const oldMarks = marks.filter(({isNew}) => !isNew);
-
-                await m.ingestMarkObservations(observation, obs, newMarks);
-                await m.ingestMarkDeployments(observation, obs, oldMarks);
-
-                await o.ingestSeal(observation, obs);
-
-                await o.ingestMeasurement(observation, obs);
-
-                await o.ingestFieldLeaders(observation, obs);
-
-                await o.ingestPupAge(observation, obs);
-
-                await o.ingestPupCount(observation, obs);
                 */
+
+                const marks = await m.ingestMarks(observation);
+                if (marks.length > 0) {
+                    const newMarks = marks.filter(({isNew}) => isNew);
+                    const oldMarks = marks.filter(({isNew}) => !isNew);
+
+                    await m.ingestMarkObservations(connection, observationId, oldMarks);
+                    await m.ingestMarkDeployments(connection, observationId, newMarks);
+                }
+
+                //await o.ingestSeal(observation, observationId);
+
+                await o.ingestMeasurement(observation, observationId);
+
+                await o.ingestFieldLeaders(observation, observationId);
+
+                await o.ingestPupAge(observation, observationId);
+
+                //await o.ingestPupCount(observation, obs);
 
                 await connection.query("COMMIT");
                 return null;
             } catch (e) {
                 await connection.query('ROLLBACK');
+                console.error(e.message);
                 return e.message;
             } finally {
                 connection.release()
