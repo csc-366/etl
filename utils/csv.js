@@ -155,7 +155,7 @@ const parseTags = (row) => {
             if (Object.keys(agg).includes(tagIndex)) {
                 agg[tagIndex] = {...agg[tagIndex], [tagComponent]: value};
             } else {
-                agg[tagIndex] = {[tagComponent]: value}
+                agg[tagIndex] = {[tagComponent]: value, tagNum: tagIndex}
             }
 
             if (Object.values(agg[tagIndex]).filter(item => item).length === 0) {
@@ -175,6 +175,9 @@ const parseMarks = (row) => {
             return markRegex.test(key)
         }).reduce((agg, [key, value]) => {
             const matches = markRegex.exec(key);
+            if (_.isString(value)) {
+                value = value.trim();
+            }
 
             const markIndex = matches[1];
 
@@ -182,6 +185,7 @@ const parseMarks = (row) => {
             switch (matches[2]) {
                 case '?':
                     markComponent = 'isNew';
+                    value = value === "Y";
                     break;
                 case '':
                     markComponent = 'mark';
