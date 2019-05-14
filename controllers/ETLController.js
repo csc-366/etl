@@ -1,7 +1,7 @@
 import {parse} from "../utils/csv";
 import fs from 'fs';
 import {sendData, sendError} from "../utils/responseHelper";
-import {ingest} from "../models/db";
+import {ingest} from "../models/etl/db";
 
 export async function etlIngest(req, res) {
     if (!req.file || !req.file.path) {
