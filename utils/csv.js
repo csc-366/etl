@@ -1,5 +1,7 @@
 import * as CSV from 'csv-string';
 import fs from 'fs';
+import {promisify} from 'util';
+const readFile = promisify(fs.readFile);
 import * as _ from 'lodash';
 
 /*
@@ -39,8 +41,8 @@ const headers = [
 ];
 */
 
-export function parse(filename) {
-    const s = fs.readFileSync(`./${filename}`).toString();
+export async function parse(filename) {
+    const s = (await readFile(`./${filename}`)).toString();
     const unmappedData = CSV.parse(s, ',', '"');
 
     let headers = unmappedData[0];
@@ -130,6 +132,7 @@ const parseTags = (row) => {
             switch (matches[2]) {
                 case '?':
                     tagComponent = 'isNew';
+                    value = value === 'Y';
                     break;
                 case '#':
                     tagComponent = 'tag';
@@ -155,7 +158,7 @@ const parseTags = (row) => {
             if (Object.keys(agg).includes(tagIndex)) {
                 agg[tagIndex] = {...agg[tagIndex], [tagComponent]: value};
             } else {
-                agg[tagIndex] = {[tagComponent]: value, tagNum: tagIndex}
+                agg[tagIndex] = {[tagComponent]: value, tagNum: Number.parseInt(tagIndex)}
             }
 
             if (Object.values(agg[tagIndex]).filter(item => item).length === 0) {

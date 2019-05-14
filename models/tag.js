@@ -1,7 +1,7 @@
-import {query, format} from "./db";
+import {format} from "./db";
 
-export const TAG_COLOR_REGEX = /[WBGPVRYO]/;
-export const VALID_TAG_POS_CHARS = 'RLSouil-_';
+export const TAG_REGEX = /([WBGPVRYO])(.+)/;
+export const TAG_POSITION_REGEX = /[RLSouil\-_0-9]+/;
 
 export const ingestTagPositions = async (positions) => {
     const insertValues = positions.map(({position, nationalTagPosition}) => [position, nationalTagPosition]);
@@ -13,53 +13,33 @@ export const ingestTagColors = async (colors) => {
     query("INSERT INTO TagColor(Color, NationalTagColor, ColorName) VALUES ?", insertValues);
 };
 
-export const ingestTags = async ({tags}) => {
-    const insertValues = tags.map(({tag, position}) => {
-        const [, color, number] = TAG_REGEX.exec(tag);
-        return format("(?,?,?)", [number, color, position]);
-    }).join(',');
-    if (insertValues.length === 0)
-        return;
-
-    insertValues.forEach(tag => {
-        if (!TAG_COLOR_REGEX.test(tag.color)) {
-            throw new Error("Bad color")
+export const ingestTags = async ({tags, connection}) => {
+    let insertedTags = [];
+    for (let i = 0; i < tags.length; i++ ) {
+        const {tag, position, isNew, tagNum} = tags[i];
+        if (!TAG_REGEX.test(tag)) {
+            continue;
+        } else if (!TAG_POSITION_REGEX.test(position)) {
+            continue;
         }
-    });
 
-    insertValues.forEach(tag => {
-       for (let i = 0; i < tag.position.length; i++) {
-          if (!VALID_TAG_POS_CHARS.includes(tag.position[i])) {
-              throw new Error("Bad tag")
-          }
-       }
-    });
+        const {color, number} = tag;
+        const q = format("INSERT INTO Tag (Number, Color, Position) VALUES (?,?,?)", [number, color, position]);
+        try {
+            await connection.query(q);
+        } catch (e) {
+            continue
+        }
+        const id = (await connection.query("SELECT LAST_INSERT_ID() as id"))[0][0].id;
 
-    try {
-        const q = `INSERT INTO Tag (Number, Color, Position) VALUES ${insertValues}`;
-        await query(q);
-        return insertValues.map(tag => {
-            return tag.number;
-        });
-    } catch (e) {
-        console.error(e.message)
+        insertedTags.push({
+            isNew, id:number,tagNum
+        })
     }
+    return insertedTags
 };
 
-export const ingestTag = async ({number, color, position}) => {
-    if (!TAG_COLOR_REGEX.test(color)) {
-        throw new Error( "Bad color")
-    }
-    for (let i = 0; i < position.length; i++) {
-       if (!VALID_TAG_POS_CHARS.includes(position[i])) {
-           throw new Error("Bad tag")
-       }
-    }
-    const q = format("INSERT INTO Tag (Number, Color, Position) VALUES (?,?,?)", [number, color, position]);
-    return (await connection.query("SELECT LAST_INSERT_ID() as ID"))[0][0].ID;
-};
-
-export const ingestTagDeployments = async (connection, observationId, tags) => {
+export const ingestTagDeployments = async ({connection}, observationId, tags) => {
     for (let i = 0; i < tags.length; i++) {
         const {id} = tags[i];
         const q = format("INSERT INTO TagDeployment (ObservationId, TagNumber) VALUES (?,?)", [observationId,id]);
@@ -67,10 +47,10 @@ export const ingestTagDeployments = async (connection, observationId, tags) => {
     }
 };
 
-export const ingestTagObservations = async (connection, observationId, tags) => {
+export const ingestTagObservations = async ({connection}, observationId, tags) => {
     for (let i = 0; i < tags.length; i++) {
         const {id} = tags[i];
-        const q = format("INSERT INTO TagDeployment (ObservationId, TagNumber) VALUES (?,?)", [observationId,id]);
+        const q = format("INSERT INTO TagObservation (ObservationId, TagNumber) VALUES (?,?)", [observationId,id]);
         await connection.query(q);
     }
 };

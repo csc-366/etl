@@ -2,80 +2,66 @@ import {format} from './db';
 
 const insertAgeClasses = async (classes) => {
     const insertValues = classes.map(({shortName, fullName}) => {
-        return format('(?,?)',[shortName,fullName]);
+        return format('(?,?)', [shortName, fullName]);
     }).join(',');
     query(`INSERT INTO AgeClass (ShortName, FullName) VALUES ${insertValues}`);
 };
 
 const ingestObservers = async (observers) => {
     const insertValues = observers.map(({email, firstName, lastName, affiliation}) => {
-        return format('(?,?,?,?)',[email,firstName,lastName,affiliation]);
+        return format('(?,?,?,?)', [email, firstName, lastName, affiliation]);
     }).join(',');
     query(`INSERT INTO Observer (Email, FirstName, LastName, Affiliation) VALUES ${insertValues}`);
 };
 
-export const ingestObservation = async ({date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments, connection}) => {
+export const ingestObservation = async ({date, location, reviewer, submittedBy, observer, age, moltPercentage, comments, connection}) => {
+    if (age) {
+        age = age.trim();
+        if (!isNaN(age)) {
+            age = 'P'
+        }
+    }
     const q = format("INSERT INTO Observation (Date, Location, Reviewer, SubmittedBy, Observer, AgeClass, MoltPercentage, Comments) VALUES (?,?,?,?,?,?,?,?)",
-        [date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments]);
-    const result = await connection.query(q);
+        [date, location, reviewer, submittedBy, observer, age, moltPercentage, comments]);
+    try {
+        await connection.query(q);
+    } catch (e) {
+        console.log(`Could not insert Observation (${date},${location},${reviewer},${submittedBy},${observer},${age},${moltPercentage},${comments})\n\t${e.message}`)
+    }
 
-        return (await connection.query("SELECT LAST_INSERT_ID() as id"))[0][0].id
-
+    return (await connection.query("SELECT LAST_INSERT_ID() as id"))[0][0].id
 };
 
-const buildDateString = (date) => {
-    return `${date.getYear()}-${date.getMonth()}-${date.getDate()}`
-};
-
-const ingestObservations = async (observations) => {
-    const insertValues = observations.map(({date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments}) => {
-        return format('(?,?,?,?,?,?,?,?)',[date, location, reviewer, submittedBy, observer, ageClass, moltPercentage, comments])
-    }).join(',');
-    query(`INSERT INTO Observation (Date, Location, Reviewer, SubmittedBy, Observer, AgeClass, MoltPercentage, Comments) VALUES ${insertValues}`);
-};
-
-export const ingestPupCount = async (counts) => {
-    const insertValues = counts.map(({observationId, count}) => {
-        return format('(?,?)',[observationId,count])
-    }).join(',');
-    query(`INSERT INTO PupCount VALUES ${insertValues}`);
+export const ingestPupCount = async ({pupCount, connection}, observationId) => {
+    if (pupCount !== null && !isNaN(pupCount)) {
+        const q = format("INSERT INTO PupCount (ObservationId, Count) VALUES (?,?)", [observationId, pupCount]);
+        await connection.query(q);
+    }
 };
 
 export const ingestPupAge = async ({age, connection}, observationId) => {
-    if (!isNaN(age)) {
-        const q = format("INSERT INTO PupAge (ObservationId")
+    if (age !== null && !isNaN(age)) {
+        const q = format("INSERT INTO PupAge (ObservationId, Age) VALUES (?,?)", [observationId, age]);
+        await connection.query(q);
     }
-    const insertValues = counts.map(({observationId, age}) => {
-        return format('(?,?)', [observationId, age]);
-    }).join(',');
-    query(`INSERT INTO PupAge (ObservationId, Age) VALUES ${insertValues}`)
 };
 
 export const ingestMeasurement = async ({measurement, connection}, observationId) => {
     if (Object.values(measurement).filter(m => m).length > 0) {
         const {standardLength, curvilinearLength, axillaryGirth, totalMass, massTare, animalMass} = measurement;
         const q = format("INSERT INTO Measurement (ObservationId, StandardLength, CurvilinearLength, AxillaryGirth, TotalMass, MassTare, AnimalMass) VALUES (?,?,?,?,?,?,?)",
-            [observationId, standardLength, curvilinearLength, axillaryGirth, totalMass, massTare, animalMass])
-        await connection.query(q)
+            [observationId, standardLength, curvilinearLength, axillaryGirth, totalMass, massTare, animalMass]);
+        try {
+            await connection.query(q)
+        } catch (e) {
+            console.log(`Could not insert Measurement (${observationId},measurements)\n\t${e.message}`)
+        }
     }
 };
 
-const ingestMeasurements = async (measurements) => {
-    const insertValues = measurements.map(({observationId, standardLength, curvilinearLength, axillaryGirth, totalMass, massTare, animalMass}) => {
-        return format('(?,?,?,?,?,?,?)', [observationId, standardLength, curvilinearLength, axillaryGirth, totalMass, massTare, animalMass])
-    }).join(',');
-    query(`INSERT INTO Measurement (ObservationId, StandardLength, CurvilinearLength, AxillaryGirth, TotalMass, MassTare, AnimalMass) VALUES ${insertValues}`);
-};
-
-export const ingestSeal = async ({sex,procedure=null}, observationId) => {
-    const q = format("INSERT INTO Seal (FirstObservation, Sex, Procedure) VALUES (?,?,?)", [observationId,sex,procedure])
-};
-
-const ingestSeals = async (seals) => {
-    const insertValues = seals.map(({firstObservation, sex, procedure}) => {
-        return format(`(?,?,?)`, [firstObservation, sex, procedure])
-    }).join(',')
-    query(`INSERT INTO Seal (FirstObservation, Sex, Procedure) VALUES ${insertValues}`)
+export const ingestSeal = async ({sex, procedure = null, connection}, observationId) => {
+    const q = format("INSERT INTO Seal (FirstObservation, Sex, `Procedure`) VALUES (?,?,?)", [observationId, sex, procedure]);
+    await connection.query(q);
 };
 
 export const ingestFieldLeaders = async ({fieldLeaders, connection}, observationId) => {
@@ -83,7 +69,12 @@ export const ingestFieldLeaders = async ({fieldLeaders, connection}, observation
         for (let i = 0; i < fieldLeaders.length; i++) {
             const leader = fieldLeaders[i];
             const q = format("INSERT INTO FieldLeader (ObservationId, Leader) VALUES (?,?)", [observationId, leader]);
-            await connection.query(q);
+            try {
+                await connection.query(q);
+            } catch (e) {
+                const observation = await connection.query("SELECT * FROM Observation WHERE ID = ?", [observationId]);
+                console.log(`Could not insert FieldLeader (${observationId},${leader})\n\t${e.message}`)
+            }
         }
     }
 };
