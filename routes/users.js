@@ -1,25 +1,30 @@
-import express from 'express';
+import {Router} from 'express';
+import {
+   validate,
+   register,
+   getUser,
+   deleteUser,
+   approveUser
+} from '../controllers/users';
 
-let router = express.Router();
+const usersRouter = Router();
+express.baseURL = '/users';
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
+usersRouter.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-// TODO: Create user account
-// TODO: Get User by ID
+usersRouter.post('/register', validate('register'), register);
+usersRouter.get('/:id', validate('getUser'), getUser);
+
 // TODO: Does username exist?
 // TODO: Does email exist?
-// TODO: Delete User
-// TODO: Update user information (password, email, etc.)
-// TODO: Approve user account
-/*
- * TODO: Log user in
- *  - Generate Session Token
- *  - Remember, do NOT store secrets in plain text in this file!! Put it in .env and use process.env!!
- *  - Reject invalid username/password combo
- *  - Reject unapproved account?
-*/
+
+usersRouter.delete('/:id', validate('deleteUser'), deleteUser);
+usersRouter.update('/:id', validate('updateUser'), updateUser);
+
+// not sure how approving a user will fit into the database?
+usersRouter.update('/:id', validate('approveUser'), approveUser);
 
 module.exports = router;
