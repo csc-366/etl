@@ -3,6 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 
+import sessionUtil from './utils/sessionUtil';
 import indexRouter from './routes/index';
 import usersRouter from './routes/users';
 import etlRouter from './routes/etl';
@@ -15,6 +16,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+/*
+// TODO: check general login with sessionUtil
+app.use(sessionUtil.router);
+app.use(sessionUtil.checkLogin);
+*/
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
