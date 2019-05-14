@@ -13,7 +13,7 @@ export async function etlIngest(req, res) {
 
     let data;
     try {
-        data = parse(filename);
+        data = await parse(filename);
     } catch (e) {
         sendError(res, 500, `${e.message}`);
         throw e;

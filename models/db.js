@@ -24,53 +24,60 @@ export const format = mysql.format;
 export async function ingest(data) {
     data
         .map(async (observation) => {
-            const connection = await pool.getConnection();
-            await connection.query("START TRANSACTION");
+                const connection = await pool.getConnection();
+                await connection.query("START TRANSACTION");
 
-            observation = {...observation, connection};
+                observation = {...observation, connection};
 
-            try {
-                // Returns {observationId}
-                const observationId = await o.ingestObservation(observation);
+                try {
+                    const observationId = await o.ingestObservation(observation);
 
-                /*
-                // Returns [{tagId}]
-                const tags = await t.ingestTags(observation);
-                const newTags = tags.filter(({isNew}) => isNew);
-                const oldTags = tags.filter(({isNew}) => !isNew);
+                    const tags = await t.ingestTags(observation);
+                    if (tags.length > 0) {
+                        const newTags = tags.filter(({isNew}) => isNew);
+                        const oldTags = tags.filter(({isNew}) => !isNew);
 
-                await t.ingestTagObservations(observation, obs, oldTags);
-                await t.ingestTagDeployments(observation, obs, newTags);
-                */
+                        await t.ingestTagObservations(observation, observationId, oldTags);
+                        await t.ingestTagDeployments(observation, observationId, newTags);
 
-                const marks = await m.ingestMarks(observation);
-                if (marks.length > 0) {
-                    const newMarks = marks.filter(({isNew}) => isNew);
-                    const oldMarks = marks.filter(({isNew}) => !isNew);
+                        for (let i = 0; i < tags.length; i++) {
+                            const {tagNum, isNew} = tags[i];
+                            if (tagNum === 1 && isNew) {
+                                await o.ingestSeal(observation, observationId)
+                            }
+                        }
+                    }
 
-                    await m.ingestMarkObservations(connection, observationId, oldMarks);
-                    await m.ingestMarkDeployments(connection, observationId, newMarks);
+                    const marks = await m.ingestMarks(observation);
+                    if (marks.length > 0) {
+                        const newMarks = marks.filter(({isNew}) => isNew);
+                        const oldMarks = marks.filter(({isNew}) => !isNew);
+
+                        await m.ingestMarkObservations(connection, observationId, oldMarks);
+                        await m.ingestMarkDeployments(connection, observationId, newMarks);
+                    }
+
+
+                    await o.ingestMeasurement(observation, observationId);
+
+                    await o.ingestFieldLeaders(observation, observationId);
+
+                    await o.ingestPupAge(observation, observationId);
+
+                    await o.ingestPupCount(observation, observationId);
+
+                    await connection.query("COMMIT");
+                    return null;
                 }
-
-                //await o.ingestSeal(observation, observationId);
-
-                await o.ingestMeasurement(observation, observationId);
-
-                await o.ingestFieldLeaders(observation, observationId);
-
-                await o.ingestPupAge(observation, observationId);
-
-                //await o.ingestPupCount(observation, obs);
-
-                await connection.query("COMMIT");
-                return null;
-            } catch (e) {
-                await connection.query('ROLLBACK');
-                console.error(e.message);
-                return e.message;
-            } finally {
-                connection.release()
+                catch
+                    (e) {
+                    await connection.query('ROLLBACK');
+                    throw e;
+                }
+                finally {
+                    connection.release()
+                }
             }
-        })
+        )
         .filter(observation => observation);
 }
