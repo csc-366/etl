@@ -4,11 +4,12 @@ import {
    register,
    getUser,
    deleteUser,
+   updateUser,
    approveUser
 } from '../controllers/users';
 
 const usersRouter = Router();
-express.baseURL = '/users';
+usersRouter.baseURL = '/users';
 
 /* GET users listing. */
 usersRouter.get('/', function(req, res, next) {
@@ -22,9 +23,9 @@ usersRouter.get('/:id', validate('getUser'), getUser);
 // TODO: Does email exist?
 
 usersRouter.delete('/:id', validate('deleteUser'), deleteUser);
-usersRouter.update('/:id', validate('updateUser'), updateUser);
+usersRouter.put('/:id', validate('updateUser'), updateUser);
 
 // not sure how approving a user will fit into the database?
-usersRouter.update('/:id', validate('approveUser'), approveUser);
+usersRouter.put('/:id', validate('approveUser'), approveUser);
 
-module.exports = router;
+module.exports = usersRouter;
