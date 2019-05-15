@@ -20,5 +20,20 @@ export async function approveUser(req,res) {
 }
 
 export const validate = (method) => {
+   switch (method) {
+      case 'register':
+         return [];
+      case 'getUser':
+         return [];
+      case 'deleteUser':
+         return [];
+      case 'updateUser':
+         return [];
+      case 'approveUser':
+         return [];
+
+      default:
+         return [];
+   }
 
 }
