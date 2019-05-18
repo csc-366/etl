@@ -17,15 +17,15 @@ usersRouter.get('/', function(req, res, next) {
 });
 
 usersRouter.post('/register', validate('register'), register);
-usersRouter.get('/:id', validate('getUser'), getUser);
-
 // TODO: Does username exist?
 // TODO: Does email exist?
 
+usersRouter.get('/:id', validate('getUser'), getUser);
 usersRouter.delete('/:id', validate('deleteUser'), deleteUser);
 usersRouter.put('/:id', validate('updateUser'), updateUser);
 
-// not sure how approving a user will fit into the database?
+// TODO: need to address how approving a user will fit into app. add another
+//  role?
 usersRouter.put('/:id', validate('approveUser'), approveUser);
 
 module.exports = usersRouter;
