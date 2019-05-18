@@ -7,7 +7,6 @@ import {
 } from '../controllers/sessions';
 
 const sessionsRouter = Router();
-express.baseURL = '/sessions';
 
 /*
  * TODO: Log user in
