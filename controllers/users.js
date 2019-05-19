@@ -1,5 +1,5 @@
 import {sendData, sendError} from "../utils/responseHelper";
-import {body, query, param, validationResult} from 'express-validator/check';
+import {body, validationResult} from 'express-validator/check';
 import * as db from '../models/users';
 
 export async function register(req, res) {
@@ -13,8 +13,8 @@ export async function register(req, res) {
    const user = await db.addUser(req.body);
 
    if (user === null) {
-      sendError(res, 400, `A username with ${req.body.username} already" +
-       " exists`);
+      sendError(res, 400,
+       `A username with ${req.body.username} already exists`);
       return;
    }
 
@@ -44,7 +44,27 @@ export const validate = (method) => {
             body('username')
                .exists().withMessage("is required")
                .isLength({min: 1})
-               .withMessage("must be at least 1 character long")
+               .withMessage("must be at least 1 character long"),
+            body('password')
+             .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+            body('firstName')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+            body('lastName')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+            body('email')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+            body('role')
+               .exists().withMessage("is required")
+               .isIn(['Admin', 'Scientist', 'Citizen Scientist'])
+               .withMessage("Invalid role selected")
          ];
       case 'getUser':
          return [];
@@ -59,4 +79,4 @@ export const validate = (method) => {
          return [];
    }
 
-}
+};
