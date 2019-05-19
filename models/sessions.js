@@ -1,21 +1,17 @@
-import * as mysql from "mysql";
+import {compare} from 'bcrypt';
+import {getUserByUsername} from "./users";
 
-const {DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE} = process.env;
+export const credentialsAreValid = async (username, password) => {
+   const user = await getUserByUsername(username);
 
-const pool = mysql.createPool({
-    connectionLimit: 10,
-    host: DB_HOST,
-    user: DB_USER,
-    password: DB_PASSWORD,
-    database: DB_DATABASE
-});
+   if (!user) {
+      return null;
+   }
 
-export const credentialsAreValid = async (username) => {
-    const connection = await pool.getConnection()
-    const response = await connection.query(`SELECT * FROM User WHERE Username='${username}'`);
+   return await compare(password, user.PasswordHash);
+};
 
-    const user = response.rows[0];
-    console.log(user);
+export const sessionExists = async (cookie) => {
 
 };
 

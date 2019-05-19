@@ -1,24 +1,23 @@
 // This middleware assumes cookieParser has been "used" before this
 import {sendError} from "./responseHelper";
-
-var crypto = require('crypto');
+import * as crypto from "crypto";
 
 const twoHours = 7200000;
 const tokenLength = 16;
+const duration = twoHours;
+const cookieName = 'SeaQLAuth'; // Cookie key for authentication tokens
 
-var sessions = {};          // All currently logged-in Sessions
-var duration = twoHours;
-var cookieName = 'SeaQLAuth'; // Cookie key for authentication tokens
+let sessions = {};          // All currently logged-in Sessions
 
 // Session-constructed objects represent an ongoing login session, including
 // user details, login time, and time of last use, the latter for the purpose
 // of timing-out sessions that have been unused for too long.
-var Session = function(user) {
-   this.username = user.username;
-   this.firstName = user.firstName;
-   this.lastName = user.lastName;
-   this.email = user.email;
-   this.role = user.role;
+let Session = function(user) {
+   this.username = user.Username;
+   this.firstName = user.FirstName;
+   this.lastName = user.LastName;
+   this.email = user.Email;
+   this.role = user.Role;
    this.loginTime = new Date().getTime();
    this.lastUsed = new Date().getTime();
 };
@@ -34,8 +33,8 @@ Session.prototype.isAdmin = function() {
 // 1 Cookie is tagged by |cookieName|, times out on the client side after
 // |duration| shown by the browser to the user, again to prevent hacking.
 exports.makeSession = function makeSession(user, res) {
-   var authToken = crypto.randomBytes(tokenLength).toString('hex');
-   var session = new Session(user);
+   let authToken = crypto.randomBytes(tokenLength).toString('hex');
+   let session = new Session(user);
 
    res.cookie(cookieName, authToken, {maxAge: duration, httpOnly: true}); // 1
    sessions[authToken] = session;
@@ -74,7 +73,7 @@ exports.router = function(req, res, next) {
 exports.checkLogin = function(req, res, next) {
    console.log(req.path);
    if (req.session || (req.method === 'POST' &&
-    (req.path === '/users' || req.path === '/sessions'))) {
+    (req.path === '/users/register' || req.path === '/sessions/login'))) {
       next();
    } else
       sendError(res,401, 'Not logged in');
