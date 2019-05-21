@@ -11,9 +11,9 @@ export async function etlIngest(req, res) {
 
     const filename = req.file.path;
 
-    let data;
+    let data, parseErrors;
     try {
-        data = await parse(filename);
+        [data,parseErrors] = await parse(filename);
     } catch (e) {
         sendError(res, 500, `${e.message}`);
         throw e;
@@ -21,7 +21,7 @@ export async function etlIngest(req, res) {
         await fs.unlink(`./${filename}`);
     }
 
-    const results = await ingest(data);
+    const ingestErrors = await ingest(data);
 
-    sendData(res, data);
+    sendData(res, {parseErrors, ingestErrors});
 }
