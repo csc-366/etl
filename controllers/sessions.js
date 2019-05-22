@@ -1,5 +1,5 @@
 import {sendData, sendError} from '../utils/responseHelper';
-import {body, validationResult} from 'express-validator/check';
+import {body, param, validationResult} from 'express-validator/check';
 import {credentialsAreValid} from '../models/sessions';
 import {getUserByUsername} from "../models/users";
 import {makeSession, sessions} from "../utils/sessionUtil"
@@ -51,7 +51,7 @@ export async function logout(req,res) {
       sendData(res, "Logout successful.");
    }
    else {
-      sendError(res, 403, "Logout failure.")
+      sendError(res, 400, "Logout failure.")
    }
 }
 
