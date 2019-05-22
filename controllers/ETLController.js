@@ -1,7 +1,7 @@
 import {parse} from "../utils/csv";
 import fs from 'fs';
 import {sendData, sendError} from "../utils/responseHelper";
-import {ingest} from "../models/etl/db";
+import {ingest} from "../models/db";
 import {promisify} from "util";
 const unlink = promisify(fs.unlink);
 export async function etlIngest(req, res) {
@@ -12,9 +12,9 @@ export async function etlIngest(req, res) {
 
     const filename = req.file.path;
 
-    let data;
+    let data, parseErrors;
     try {
-        data = await parse(filename);
+        [data,parseErrors] = await parse(filename);
     } catch (e) {
         sendError(res, 500, `${e.message}`);
         throw e;
@@ -22,7 +22,7 @@ export async function etlIngest(req, res) {
         await unlink(`./${filename}`);
     }
 
-    const results = await ingest(data);
+    const ingestErrors = await ingest(data);
 
-    sendData(res, data);
+    sendData(res, {parseErrors, ingestErrors});
 }
