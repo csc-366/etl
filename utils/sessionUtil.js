@@ -5,9 +5,9 @@ import * as crypto from "crypto";
 const twoHours = 7200000;
 const tokenLength = 16;
 const duration = twoHours;
-const cookieName = 'SeaQLAuth'; // Cookie key for authentication tokens
+export const cookieName = 'SeaQLAuth'; // Cookie key for authentication tokens
 
-let sessions = {};          // All currently logged-in Sessions
+export let sessions = {};          // All currently logged-in Sessions
 
 // Session-constructed objects represent an ongoing login session, including
 // user details, login time, and time of last use, the latter for the purpose
@@ -23,7 +23,7 @@ let Session = function(user) {
 };
 
 Session.prototype.isAdmin = function() {
-   return this.role === 1;
+   return this.role === "Admin";
 };
 
 // Export a function that logs in |user| by creating an authToken and sending
@@ -32,7 +32,7 @@ Session.prototype.isAdmin = function() {
 //
 // 1 Cookie is tagged by |cookieName|, times out on the client side after
 // |duration| shown by the browser to the user, again to prevent hacking.
-exports.makeSession = function makeSession(user, res) {
+export const makeSession = (user, res) => {
    let authToken = crypto.randomBytes(tokenLength).toString('hex');
    let session = new Session(user);
 
@@ -43,7 +43,7 @@ exports.makeSession = function makeSession(user, res) {
 };
 
 // Export a function to log out a user, given an authToken
-exports.deleteSession = function(authToken) {
+export const deleteSession = (authToken) => {
    delete sessions[authToken];
 };
 
@@ -51,7 +51,7 @@ exports.deleteSession = function(authToken) {
 // cookies, delete the Session if it has timed out, or attach the Session to
 // |req| if it's current If |req| has an attached Session after this
 // process, then down-chain routes will treat |req| as logged-in.
-exports.router = function(req, res, next) {
+export const router = (req, res, next) => {
    // If we present a session cookie that corresponds with one in |sessions|...
    if (req.cookies[cookieName] && sessions[req.cookies[cookieName]]) {
       // If the session was last used more than |duration| mS ago..
@@ -70,7 +70,7 @@ exports.router = function(req, res, next) {
  * Checks general login. If registering a user or logging in, continue with
  * processing the req, otherwise respond immediately with a 401 error.
  */
-exports.checkLogin = function(req, res, next) {
+export const checkLogin = (req, res, next) => {
    console.log(req.path);
    if (req.session || (req.method === 'POST' &&
     (req.path === '/users/register' || req.path === '/sessions/login'))) {
@@ -79,5 +79,4 @@ exports.checkLogin = function(req, res, next) {
       sendError(res,401, 'Not logged in');
 };
 
-exports.cookieName = cookieName;
-exports.sessions = sessions;
+

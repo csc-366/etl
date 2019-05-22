@@ -9,11 +9,11 @@ export const getUserByUsername = async (username) => {
 
    let user = await query(selectQry);
 
-   if (user[0].length === 0) {
+   if (user[0] && (user[0].length === 0)) {
       return null;
    }
 
-   return user[0][0];
+   return user[0] && user[0][0];
 };
 
 export const addUser = async (body) => {

@@ -1,6 +1,6 @@
 import {sendData, sendError} from "../utils/responseHelper";
-import {body, validationResult} from 'express-validator/check';
-import * as db from '../models/users';
+import {body, param, validationResult} from 'express-validator/check';
+import {getUserByUsername, addUser} from '../models/users';
 
 export async function register(req, res) {
    const errors = validationResult(req);
@@ -10,7 +10,7 @@ export async function register(req, res) {
       return;
    }
 
-   const user = await db.addUser(req.body);
+   const user = await addUser(req.body);
 
    if (user === null) {
       sendError(res, 400,
@@ -22,7 +22,27 @@ export async function register(req, res) {
 }
 
 export async function getUser(req,res) {
+   let username = req.params.username;
+   const errors = validationResult(req);
 
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   let user = await getUserByUsername(username);
+
+   if (req.session.isAdmin() || username === user.Username) {
+      if (!user) {
+         sendData(res, []);
+      }
+      else {
+         sendData(res, user);
+      }
+   }
+   else {
+      sendError(res, 403, "Forbidden");
+   }
 }
 
 export async function deleteUser(req,res) {
