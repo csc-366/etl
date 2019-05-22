@@ -17,7 +17,7 @@ export const ingestMarks = async ({year, marks, connection}) => {
         } catch (e) {
             throw new Error("Invalid Mark Component(s)");
         }
-        const id = (await query(connection, "SELECT LAST_INSERT_ID() as id"))[0][0].id;
+        const id = (await query(connection, "SELECT LAST_INSERT_ID() as id"))[0].id;
 
         insertedMarks.push({
             isNew,
@@ -28,7 +28,7 @@ export const ingestMarks = async ({year, marks, connection}) => {
     return insertedMarks
 };
 
-export const ingestMarkObservations = async (connection, observationId, marks) => {
+export const ingestMarkObservations = async ({connection, observationId}, marks) => {
     for (let i = 0; i < marks.length; i++) {
         const {id} = marks[i];
         const q = format("INSERT INTO MarkObservation (ObservationId, MarkId) VALUES (?,?)", [observationId, id]);
@@ -36,10 +36,10 @@ export const ingestMarkObservations = async (connection, observationId, marks) =
     }
 };
 
-export const ingestMarkDeployments = async (connection, observationId, marks) => {
+export const ingestMarkDeployments = async ({connection, observationId, sealId}, marks) => {
     for (let i = 0; i < marks.length; i++) {
         const {id} = marks[i];
-        const q = format("INSERT INTO MarkDeployment (ObservationId, MarkId) VALUES (?,?)", [observationId, id]);
+        const q = format("INSERT INTO MarkDeployment (ObservationId, MarkId, sealId) VALUES (?,?,?)", [observationId, id, sealId]);
         await query(connection, q);
     }
 };

@@ -11,7 +11,7 @@ import {log, setOutputFileName} from "../utils/dump";
 
 const {DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE} = process.env;
 
-const pool = mysql.createPool({
+export const pool = mysql.createPool({
     connectionLimit: 10,
     host: DB_HOST,
     user: DB_USER,
@@ -21,14 +21,14 @@ const pool = mysql.createPool({
 
 export const query = async (connection, q, params) => {
     try {
-        const result = await connection.query(q, params);
-        if (process.env.ENABLE_LOGS) {
+        const [rows,] = await connection.query(q, params);
+        if (process.env.ENABLE_LOGS === 'true') {
             await log(`SUCCESS: ${q}`);
         }
-        return result;
+        return rows;
     } catch (e) {
-        if (process.env.ENABLE_LOGS) {
-            await log(`FAILURE: ${q}`, error=true);
+        if (process.env.ENABLE_LOGS === 'true') {
+            await log(`FAILURE: ${q}`);
         }
         throw e;
     }
@@ -43,7 +43,7 @@ export async function ingest(data) {
     for (let i = 0; i < data.length; i++) {
         let observation = data[i];
         const connection = await pool.getConnection();
-        await connection.query("START TRANSACTION");
+        await query(connection, "START TRANSACTION");
 
         observation = {...observation, connection};
 
@@ -54,20 +54,19 @@ export async function ingest(data) {
         try {
             const observationId = await o.ingestObservation(observation);
 
+            const sealId = await o.ingestSeal(observation, observationId);
+
+            observation = {...observation, observationId, sealId};
+
+            await o.ingestSealObservation(observation);
+
             const tags = await t.ingestTags(observation);
             if (tags.length > 0) {
                 const newTags = tags.filter(({isNew}) => isNew);
                 const oldTags = tags.filter(({isNew}) => !isNew);
 
-                await t.ingestTagObservations(observation, observationId, oldTags);
-                await t.ingestTagDeployments(observation, observationId, newTags);
-
-                for (let i = 0; i < tags.length; i++) {
-                    const {tagNum, isNew} = tags[i];
-                    if (tagNum === 1 && isNew) {
-                        await o.ingestSeal(observation, observationId)
-                    }
-                }
+                await t.ingestTagObservations(observation, oldTags);
+                await t.ingestTagDeployments(observation, newTags);
             }
 
             const marks = await m.ingestMarks(observation);
@@ -75,23 +74,23 @@ export async function ingest(data) {
                 const newMarks = marks.filter(({isNew}) => isNew);
                 const oldMarks = marks.filter(({isNew}) => !isNew);
 
-                await m.ingestMarkObservations(connection, observationId, oldMarks);
-                await m.ingestMarkDeployments(connection, observationId, newMarks);
+                await m.ingestMarkObservations(observation, oldMarks);
+                await m.ingestMarkDeployments(observation, newMarks);
             }
 
+            await o.ingestMeasurement(observation);
 
-            await o.ingestMeasurement(observation, observationId);
+            await o.ingestFieldLeaders(observation);
 
-            await o.ingestFieldLeaders(observation, observationId);
+            await o.ingestPupAge(observation);
 
-            await o.ingestPupAge(observation, observationId);
-
-            await o.ingestPupCount(observation, observationId);
+            await o.ingestPupCount(observation);
 
             await connection.query("COMMIT");
         }
         catch
             (e) {
+            console.error(e.stack);
             await query(connection, 'ROLLBACK');
             await query(connection,`INSERT INTO PendingObservations (FieldLeaders, Year, Date, Location, Sex, Age, PupCount, NewMark1, Mark1, Mark1Position, NewMark2, Mark2, Mark2Position, NewTag1, Tag1Number, Tag1Position, NewTag2, Tag2Number, Tag2Position, MoltPercentage, Season, StandardLength, CurvilinearLength, AxillaryGirth, Mass, Tare, AnimalMass, LastSeenAsPup, FirstSeenAsWeanling, \`Range\`, Comments, EnteredInAno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                 [

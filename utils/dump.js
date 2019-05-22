@@ -8,11 +8,11 @@ export const setOutputFileName = (fileName) => {
 
 export const log = async (line, error=false) => {
     fs.appendFile(outputFileName,`${line}\n`, (err) => {
-        if (err) throw err;
         if (error) {
             console.error(`LOGGER:\t${outputFileName}\t${line}`)
         } else {
             console.log(`LOGGER:\t${outputFileName}\t${line}`)
         }
+        if (err) throw err;
     });
 };
