@@ -1,45 +1,9 @@
 import * as CSV from 'csv-string';
 import fs from 'fs';
 import {promisify} from 'util';
+
 const readFile = promisify(fs.readFile);
 import * as _ from 'lodash';
-
-/*
-const headers = [
-    'fieldLeaders',
-    'year',
-    'date',
-    'location',
-    'sex',
-    'age',
-    'pupCount',
-    'newMarkOne',
-    'markOne',
-    'markOnePosition',
-    'newMarkTwo',
-    'markTwo',
-    'markTwoPosition',
-    'newTagOne',
-    'tagOne',
-    'tagOnePosition',
-    'newTagTwo',
-    'tagTwo',
-    'tagTwoPosition',
-    'moltPercentage',
-    'season',
-    'standardLength',
-    'curvilinearLength',
-    'axillaryGirth',
-    'mass',
-    'tare',
-    'massTare',
-    'lastSeenAsPup',
-    'firstSeenAsWeaner',
-    'range',
-    'comments',
-    'enteredInAno'
-];
-*/
 
 export async function parse(filename) {
     const s = (await readFile(`./${filename}`)).toString();
@@ -51,44 +15,127 @@ export async function parse(filename) {
             acc[headers[idx]] = cur ? cur : null;
             return acc
         }, {});
-        observation.rowNumber = index + 1;
+        observation.rowNumber = index + 2;
         return observation;
     });
 
+    let errors = {};
+
     const processedData = mappedData.map(row => {
-        const fieldLeaders = row['Field Leader Initials'] ? row['Field Leader Initials'].split(',').map(leader => leader.trim()) : null;
+        let fieldLeaders, year, date, location, sex, age, pupCount, marks, tags, moltPercentage, season, measurement,
+            lastSeenAsPup, firstSeenAsWeanling, rangeMS, range, comments, enteredInAno;
+        try {
+            fieldLeaders = row['Field Leader Initials'] ? row['Field Leader Initials'].split(',').map(leader => leader.trim()) : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "field leaders": e.message}
+        }
 
-        const year = row['Year'];
+        try {
+            year = Number.parseInt(row['Year'].trim());
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "year": e.message}
+        }
 
-        const date = jsDateToMySQLDate(new Date(row['Date']));
+        try {
+            date = jsDateToMySQLDate(new Date(row['Date'].trim()));
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "date": e.message}
+        }
 
-        const location = row['Loc.'];
+        try {
+            if (!row['Loc.']) {
+                errors[row.rowNumber] = {...errors[row.rowNumber], "location": "location cannot be empty"}
+            } else {
+                location = row['Loc.'].trim();
+            }
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "location": e.message}
+        }
 
-        const sex = row['Sex'];
+        try {
+            sex = row['Sex'] ? row['Sex'].trim() : null;
+            if (!['M','F', null].includes(sex)) {
+                errors[row.rowNumber] = {...errors[row.rowNumber], sex: "invalid sex"}
+            }
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "sex": e.message}
+        }
 
-        const age = row['Age'];
+        try {
+            age = row['Age'] ? row['Age'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "ageClass": e.message}
+        }
 
-        const pupCount = row['Pup?'];
+        try {
+            pupCount = row['Pup?'] ? row['Pup?'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "pupCount": e.message}
+        }
 
-        const marks = parseMarks(row);
-        const tags = parseTags(row);
+        try {
+            marks = parseMarks(row);
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "marks": e.message}
+        }
+        try {
+            tags = parseTags(row);
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "tags": e.message}
+        }
 
-        const moltPercentage = row['Molt (%)'];
+        try {
+            moltPercentage = row['Molt (%)'] ? row['Molt (%)'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "moltPercentage": e.message}
+        }
 
-        const season = row['Season'];
+        try {
+            season = row['Season'] ? row['Season'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "season": e.message}
+        }
 
-        const measurement = parseMeasurement(row);
+        try {
+            measurement = parseMeasurement(row);
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "measurement":e.message}
+        }
 
-        const lastSeenAsPup = row['Last seen as P'] ? new Date(row['Last seen as P']) : null;
+        try {
+            lastSeenAsPup = row['Last seen as P'] ? new Date(row['Last seen as P'].trim()) : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "lastSeenAsPup":e.message}
+        }
 
-        const firstSeenAsWeaner = row['First seen as W'] ? new Date(row['First seen as W']) : null;
+        try {
+            firstSeenAsWeanling = row['First seen as W'] ? new Date(row['First seen as W'].trim()) : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "firstSeenAsWeanling":e.message}
+        }
 
-        const rangeMS = lastSeenAsPup && firstSeenAsWeaner ? Math.abs(firstSeenAsWeaner.getTime() - lastSeenAsPup.getTime()) : null;
-        const range = rangeMS ? Math.ceil(rangeMS / (1000 * 60 * 60 * 24)) : null;
+        try {
+            rangeMS = lastSeenAsPup && firstSeenAsWeanling ? Math.abs(firstSeenAsWeanling.getTime() - lastSeenAsPup.getTime()) : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "rangeMS":e.message}
+        }
+        try {
+            range = rangeMS ? Math.ceil(rangeMS / (1000 * 60 * 60 * 24)) : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "range":e.message}
+        }
 
-        const comments = row['Comments'];
+        try {
+            comments = row['Comments'] ? row['Comments'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "comments":e.message}
+        }
 
-        const enteredInAno = row['Entered in Ano'];
+        try {
+            enteredInAno = row['Entered in Ano'] ? row['Entered in Ano'].trim() : null;
+        } catch (e) {
+            errors[row.rowNumber] = {...errors[row.rowNumber], "enteredInAno":e.message}
+        }
 
         const rowNumber = row.rowNumber;
 
@@ -106,7 +153,7 @@ export async function parse(filename) {
             season,
             measurement,
             lastSeenAsPup,
-            firstSeenAsWeaner,
+            firstSeenAsWeanling,
             range,
             comments,
             enteredInAno,
@@ -114,19 +161,22 @@ export async function parse(filename) {
         }
     });
 
-    return processedData
+    return [processedData, errors]
 }
 
 const parseTags = (row) => {
     const tagHeaderRegex = /(?:New )?Tag ?([0-9]+) ?(.+)/;
     const tagRegex = /([WBGPVRYO])(.*)/;
+    const completeTagRegex = /([WBGPVRYO])([^_]*)$/;
     const tags = Object.entries(row)
-        .filter(([key]) => {
-            return tagHeaderRegex.test(key)
-        }).reduce((agg, [key, value]) => {
+        .filter(([key]) => tagHeaderRegex.test(key))
+        .reduce((agg, [key, value]) => {
             const matches = tagHeaderRegex.exec(key);
 
             const tagIndex = matches[1];
+            if (!agg[tagIndex]) {
+                agg[tagIndex] = {tagNum: Number.parseInt(tagIndex)}
+            }
 
             let tagComponent;
             switch (matches[2]) {
@@ -149,17 +199,14 @@ const parseTags = (row) => {
             if (tagComponent === 'tag') {
                 if (tagRegex.test(value)) {
                     const [, color, number] = tagRegex.exec(value);
-                    value = {color, number};
+                    const isComplete = completeTagRegex.test(value);
+                    value = {color, number, isComplete};
                 } else {
                     value = null;
                 }
             }
 
-            if (Object.keys(agg).includes(tagIndex)) {
-                agg[tagIndex] = {...agg[tagIndex], [tagComponent]: value};
-            } else {
-                agg[tagIndex] = {[tagComponent]: value, tagNum: Number.parseInt(tagIndex)}
-            }
+            agg[tagIndex] = {...agg[tagIndex], [tagComponent]: value};
 
             if (Object.values(agg[tagIndex]).filter(item => item).length === 0) {
                 agg[tagIndex] = undefined;
@@ -232,7 +279,7 @@ const twoDigits = (d) => {
     if (0 <= d && d < 10)
         return `0${d}`;
     if (-10 < d && d < 0)
-        return `-0${-1*d}`;
+        return `-0${-1 * d}`;
     return d.toString();
 };
 
