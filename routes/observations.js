@@ -1,6 +1,10 @@
-import express from 'express';
+import Router from 'express';
+import {validate} from '../controllers/observations'
+import {
+   pending
+} from "../controllers/observations";
 
-let router = express.Router();
+const observationsRouter = Router();
 
 /*
  * TODO: Get most recent observations
@@ -12,4 +16,6 @@ let router = express.Router();
  *        clumped together in a filtration utility.
 */
 
-export default router;
+observationsRouter.get('/pending', validate('pending'), pending);
+
+export default observationsRouter;
