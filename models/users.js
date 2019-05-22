@@ -1,4 +1,4 @@
-import {query, format} from './db';
+import {query, format} from './db2';
 import {hash} from 'bcrypt';
 
 const saltRounds = 10;

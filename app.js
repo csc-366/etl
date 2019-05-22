@@ -29,6 +29,7 @@ app.use(sessionUtil.router);
 app.use('/', indexRouter);
 app.use('/sessions', sessionsRouter);
 app.use('/users', usersRouter);
+app.use('/observations', observationRouter);
 app.use('/etl', etlRouter);
 app.use('/obs', observationRouter);
 
