@@ -172,6 +172,9 @@ const parseTags = (row) => {
         .filter(([key]) => tagHeaderRegex.test(key))
         .reduce((agg, [key, value]) => {
             const matches = tagHeaderRegex.exec(key);
+            if (_.isString(value)) {
+                value = value.trim();
+            }
 
             const tagIndex = matches[1];
             if (!agg[tagIndex]) {
