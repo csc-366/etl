@@ -66,6 +66,7 @@ CREATE TABLE User (
   Email        VARCHAR(48),
   Affiliation  VARCHAR(24),
   Role         ENUM ('Admin', 'Scientist', 'Citizen Scientist'),
+  Approved     ENUM ('Yes', 'No'),
   PRIMARY KEY (Username),
   FOREIGN KEY (Affiliation) REFERENCES Affiliation(Affiliation)
 );
