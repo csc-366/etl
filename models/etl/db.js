@@ -7,7 +7,7 @@ import * as m from './mark';
 import * as o from './observation';
 import * as t from './tag';
 import * as u from './user';
-import {log, setOutputFileName} from "../utils/dump";
+import {log, setOutputFileName} from "../../utils/dump";
 
 const {DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE} = process.env;
 

@@ -1,7 +1,7 @@
 import {parse} from "../utils/csv";
 import fs from 'fs';
 import {sendData, sendError} from "../utils/responseHelper";
-import {ingest} from "../models/db";
+import {ingest} from "../models/etl/db";
 import {promisify} from "util";
 const unlink = promisify(fs.unlink);
 export async function etlIngest(req, res) {

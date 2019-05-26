@@ -1,5 +1,5 @@
 import {format, query} from './db';
-import {log} from '../utils/dump';
+import {log} from '../../utils/dump';
 
 const insertAgeClasses = async (connection, classes) => {
     const insertValues = classes.map(({shortName, fullName}) => {
