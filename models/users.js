@@ -17,8 +17,8 @@ export const getUserByUsername = async (username) => {
 };
 
 export const addUser = async (body) => {
-   const insertStr = `INSERT INTO User (??,??,??,??,??,??) VALUES (?,?,?,?,?,?)`;
-   const fields = ["Username", "FirstName", "LastName", "Email", "Role", "PasswordHash"];
+   const insertStr = `INSERT INTO User (??,??,??,??,??,??,??) VALUES (?,?,?,?,?,?,?)`;
+   const fields = ["Username", "FirstName", "LastName", "Email", "Role", "PasswordHash", "Approved"];
 
    let values = [body.username, body.firstName, body.lastName,
     body.email, body.role];
@@ -31,6 +31,7 @@ export const addUser = async (body) => {
 
    const hashString = await hash(body.password, saltRounds);
    values.push(hashString);
+   values.push("No"); // For default approved state of No
 
    const insertQry = format(insertStr, fields.concat(values));
    await query(insertQry);
@@ -38,3 +39,10 @@ export const addUser = async (body) => {
    user = await getUserByUsername(body.username);
    return user;
 };
+
+export const acceptUser = async (username) => {
+   const updateQry = format('UPDATE User SET Approved = ? WHERE Username = ?', ["Yes", username]);
+   console.log(updateQry);
+
+   let result = await query(updateQry);
+}

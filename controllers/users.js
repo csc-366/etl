@@ -1,6 +1,6 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, param, validationResult} from 'express-validator/check';
-import {getUserByUsername, addUser} from '../models/users';
+import {acceptUser, getUserByUsername, addUser} from '../models/users';
 
 export async function register(req, res) {
    const errors = validationResult(req);
@@ -54,6 +54,33 @@ export async function updateUser(req,res) {
 }
 
 export async function approveUser(req,res) {
+   let username = req.params.username;
+   const errors = validationResult(req);
+
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   if (!req.session.isAdmin()) {
+      sendError(res, 403, `Must be admin to approve users`);
+      return;
+   }
+
+   let user = await getUserByUsername(username);
+
+   if (!user) {
+      sendError(res, 400, `${username} does not exist`);
+   }
+
+   if (user.Approved === 'Yes') {
+      sendError(res, 400, `${username} has already been approved`);
+      return;
+   }
+
+   await acceptUser(username);
+
+   sendData(res, "Success")
 
 }
 

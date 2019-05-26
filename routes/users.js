@@ -22,6 +22,6 @@ usersRouter.put('/:username', validate('updateUser'), updateUser);
 
 // TODO: need to address how approving a user will fit into app. add another
 //  role?
-usersRouter.put('/:username', validate('approveUser'), approveUser);
+usersRouter.put('/approve/:username', validate('approveUser'), approveUser);
 
 module.exports = usersRouter;
