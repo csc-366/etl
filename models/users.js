@@ -7,13 +7,24 @@ export const getUserByUsername = async (username) => {
    const selectStr = `SELECT * FROM User WHERE Username = (?)`;
    const selectQry = format(selectStr, username);
 
-   let user = await query(selectQry);
+   let user = (await query(selectQry))[0];
 
-   if (user[0] && (user[0].length === 0)) {
+   if (user.length === 0) {
       return null;
    }
 
-   return user[0] && user[0][0];
+   return user[0];
+};
+
+export const getAllUsers = async () => {
+   let users = await query(format("SELECT * FROM User"));
+
+   users[0].forEach((user) => {
+      delete user.PasswordHash;
+      delete user.PasswordSalt;
+   });
+
+   return users[0];
 };
 
 export const addUser = async (body) => {
@@ -37,6 +48,7 @@ export const addUser = async (body) => {
    await query(insertQry);
 
    user = await getUserByUsername(body.username);
+   console.log(user)
    return user;
 };
 
@@ -45,4 +57,4 @@ export const acceptUser = async (username) => {
    console.log(updateQry);
 
    let result = await query(updateQry);
-}
+};
