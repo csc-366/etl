@@ -3,6 +3,7 @@ import {
    validate,
    register,
    getUser,
+   getUsers,
    deleteUser,
    updateUser,
    approveUser
@@ -17,6 +18,7 @@ usersRouter.post('/register', validate('register'), register);
 // TODO: Does email exist?
 
 usersRouter.get('/:username', validate('getUser'), getUser);
+usersRouter.get('/', validate('getUser'), getUsers);
 usersRouter.delete('/:username', validate('deleteUser'), deleteUser);
 usersRouter.put('/:username', validate('updateUser'), updateUser);
 

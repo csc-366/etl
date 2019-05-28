@@ -21,9 +21,8 @@ export async function login(req, res) {
       let user = await getUserByUsername(username);
       let cookie = makeSession(user, res);
 
-      let session = sessions[cookie];
       res.location(`sessions/${cookie}`);
-      sendData(res, session);
+      sendData(res, user);
    } else {
       sendError(res, 400, "Invalid login")
    }
