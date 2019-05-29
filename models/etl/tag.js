@@ -20,11 +20,11 @@ export const ingestTags = async ({tags, connection}) => {
     let insertedTags = [];
     for (let i = 0; i < tags.length; i++) {
         let {tag, position, isNew, tagNum} = tags[i];
-        if (!TAG_REGEX.test(tag)) {
+        if (!TAG_REGEX.test(tag.color + tag.number)) {
             continue;
         } else if (!TAG_POSITION_REGEX.test(position) && NATIONAL_TAG_POSITION_REGEX.test(position)) {
             position = (await query(connection, "SELECT Position FROM TagPosition WHERE NationalTagPosition=? LIMIT 1", [position]))[0].Position;
-        } else if (!COMPLETE_TAG_REGEX.test(tag)) {
+        } else if (!COMPLETE_TAG_REGEX.test(tag.color + tag.number)) {
             throw new Error("Incomplete Tag")
         }
 
@@ -40,6 +40,7 @@ export const ingestTags = async ({tags, connection}) => {
             isNew, id: number, tagNum
         })
     }
+    console.log(insertedTags);
     return insertedTags
 };
 
