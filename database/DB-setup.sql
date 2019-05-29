@@ -159,9 +159,10 @@ CREATE TABLE Season (
   Description VARCHAR(32),
   PRIMARY KEY (Year)
 );
-INSERT INTO Season (Year, Start, End, Description) VALUES ('2018', now(), now(), '2018 season');
-INSERT INTO Season (Year, Start, End, Description) VALUES ('2019', now(), now(), '2019 season');
-INSERT INTO Season (Year, Start, End, Description) VALUES ('2020', now(), now(), '2020 season');
+INSERT INTO Season (Year, Start, End, Description) VALUES ('2018', (DATE '2017/10/01'), (DATE '2018/06/01'), '2018 season');
+INSERT INTO Season (Year, Start, End, Description) VALUES ('2019', (DATE '2018/10/01'), (DATE '2019/06/01'), '2019 season');
+INSERT INTO Season (Year, Start, End, Description) VALUES ('2020', (DATE '2019/10/01'), (DATE '2020/06/01'), '2020 season');
+
 
 CREATE TABLE Mark (
   ID       INT AUTO_INCREMENT,
