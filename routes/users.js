@@ -13,6 +13,8 @@ const usersRouter = Router();
 usersRouter.baseURL = '/users';
 
 
+usersRouter.get('/', validate('getUser'), getUsers);
+usersRouter.get('/:username', validate('getUser'), getUser);
 usersRouter.post('/register', validate('register'), register);
 // TODO: Does username exist?
 // TODO: Does email exist?
