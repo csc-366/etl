@@ -1,6 +1,6 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, param, validationResult} from 'express-validator/check';
-import {acceptUser, getUserByUsername, addUser} from '../models/users';
+import {acceptUser, getAllUsers, getUserByUsername, addUser} from '../models/users';
 
 export async function register(req, res) {
    const errors = validationResult(req);
@@ -39,6 +39,24 @@ export async function getUser(req,res) {
       else {
          sendData(res, user);
       }
+   }
+   else {
+      sendError(res, 403, "Forbidden");
+   }
+}
+
+export async function getUsers(req,res) {
+   const errors = validationResult(req);
+
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   let users = await getAllUsers();
+
+   if (req.session.isAdmin()) {
+      sendData(res, users);
    }
    else {
       sendError(res, 403, "Forbidden");
