@@ -10,6 +10,9 @@ import sessionsRouter from './routes/sessions';
 import usersRouter from './routes/users';
 import etlRouter from './routes/etl';
 import observationRouter from './routes/observations';
+import colorsRouter from './routes/colors';
+import locationsRouter from "./routes/locations";
+import tagPositionsRouter from "./routes/tagPositions";
 
 const app = express();
 
@@ -27,13 +30,15 @@ app.use((req, res, next) => {
 });
 
 app.use(sessionUtil.router);
-// app.use(sessionUtil.checkLogin);
+app.use(sessionUtil.checkLogin);
 
 app.use('/', indexRouter);
 app.use('/sessions', sessionsRouter);
 app.use('/users', usersRouter);
 app.use('/observations', observationRouter);
 app.use('/etl', etlRouter);
-app.use('/obs', observationRouter);
+app.use('/colors', colorsRouter);
+app.use('/locations', locationsRouter);
+app.use('/tagPositions', tagPositionsRouter);
 
 module.exports = app;
