@@ -1,5 +1,3 @@
-START TRANSACTION;
-
 CREATE TABLE Rookery (
   Rookery VARCHAR(6),
   RookeryName VARCHAR(32),
@@ -304,5 +302,3 @@ CREATE TABLE SealObservation (
 
 SELECT DISTINCT(t.ObservationId) FROM TagDeployment t WHERE t.ObservationId NOT IN (SELECT FirstObservation FROM Seal);
 SELECT * FROM Seal;
-
-COMMIT;
