@@ -59,7 +59,7 @@ export function hasCompleteTag(tags) {
    tags.forEach((tag) => {
       fullTag = tag.color + tag.number + tag.position;
       if (COMPLETE_TAG_REGEX.test(fullTag)) {
-         completeMatch = true;
+         completeMatch = tag.number;
       }
    });
 
