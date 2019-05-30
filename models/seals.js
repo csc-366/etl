@@ -13,8 +13,8 @@ export async function getSealFromTag(tagNumber) {
 }
 
 export async function getSealFromMark(markNumber, season) {
-   let markId = (await query(format("SELECT * FROM ?? WHERE" +
-    " (Number, Season) = (?,?)", ["Mark", markNumber, season])))[0][0];
+   let markId = (await query(format("SELECT * FROM Mark WHERE" +
+    " (Number, Season) = (?,?)", [markNumber, season])))[0][0];
 
    if (!markId || !markId.ID) {
       return null;
