@@ -31,7 +31,6 @@ export async function login(req, res) {
 
 export async function getSession(req,res) {
    sendData(res, "Get session successful.");
-
 }
 
 
@@ -44,7 +43,7 @@ export async function logout(req,res) {
    }
 
    let reqSsn = req.session;
-   let logoutSsn = sessions[req.params.cookie];
+   let logoutSsn = sessions[req.cookies.SeaQLAuth];
 
    if (logoutSsn && (logoutSsn.username === reqSsn.username)) {
       sendData(res, "Logout successful.");
