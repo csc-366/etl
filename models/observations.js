@@ -1,6 +1,6 @@
 import { query, format, startTransaction, rollback} from './db2';
-import {ingestTags} from "./etl/tag";
-import {ingestMarks} from "./etl/mark";
+import { hasCompleteMark, hasNoInvalidMarks, hasPartialMark } from "./markValidation";
+import { hasCompleteTag, hasNoInvalidTags, hasPartialTag } from "./tagValidation";
 
 export async function getPendingObservations(count, page) {
    let pendingList = await query(format("SELECT * FROM PendingObservations" +
@@ -8,25 +8,23 @@ export async function getPendingObservations(count, page) {
    return pendingList[0];
 }
 
+
 export async function isValidObservation(body) {
    const tags = body.tags;
    const marks = body.marks;
 
-   if (!(await isValidPending(body))) {
+   if (!await isValidPending(body)) {
       return false;
    }
-   if ((!tags || !tags.length) && (!marks || !marks.length)) {
-      return false;
+
+   if ((hasCompleteMark(marks) || hasCompleteTag(tags)) && hasNoInvalidMarks(marks)
+    && hasNoInvalidTags(tags)) {
+      return true;
    }
-   if (!(await hasNoInvalidTags(tags))) {
-      return false;
-   }
-   if (!(await hasNoInvalidMarks(marks))) {
-      return false;
-   }
-// TODO: more robust checking with a transaction to insert the entire req body
-   return true;
+
+   return false;
 }
+
 
 export async function isValidPending(body) {
    const date = new Date(body.date);
@@ -39,9 +37,14 @@ export async function isValidPending(body) {
    if (!location || !(await isValidLocation(location))){
       return false;
    }
-   console.log("valid pending");
-   return true;
+
+   if (!hasNoInvalidMarks(body.marks) || !hasNoInvalidTags(body.tags)) {
+      return false;
+   }
+
+   return (hasPartialMark(body.marks) || hasPartialTag(body.tags));
 }
+
 
 export async function isValidDate(date) {
    const observationYear = date.getFullYear();
@@ -59,9 +62,9 @@ export async function isValidDate(date) {
       return false;
    }
 
-   console.log("valid date");
    return true;
 }
+
 
 export async function isValidLocation(location) {
    const result = await query(format("SELECT * FROM Location WHERE Beach = ?",
@@ -72,44 +75,5 @@ export async function isValidLocation(location) {
    }
    else {
       return false;
-   }
-}
-
-export async function hasNoInvalidTags(tags) {
-   if (!tags || tags.length === 0) {
-      return true;
-   }
-
-   const connection = await startTransaction();
-
-   try {
-      let insertedTags = await ingestTags({tags, connection});
-      console.log(insertedTags);
-      return true;
-   }
-   catch (e) {
-      return false;
-   }
-   finally {
-      await rollback(connection);
-   }
-}
-
-export async function hasNoInvalidMarks(marks) {
-   if (!marks || marks.length === 0) {
-      return true;
-   }
-
-   const connection = await startTransaction();
-
-   try {
-      let insertedMarks = await ingestMarks({marks, connection});
-      return true;
-   }
-   catch (e) {
-      return false;
-   }
-   finally {
-      await rollback(connection);
    }
 }
