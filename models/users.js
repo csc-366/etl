@@ -29,7 +29,7 @@ export const getAllUsers = async () => {
 
 export const addUser = async (body) => {
    const insertStr = `INSERT INTO User (??,??,??,??,??,??,??) VALUES (?,?,?,?,?,?,?)`;
-   const fields = ["Username", "FirstName", "LastName", "Email", "Role", "PasswordHash", "Approved"];
+   const fields = ["Username", "FirstName", "LastName", "Email", "Role", "PasswordHash", "Status"];
 
    let values = [body.username, body.firstName, body.lastName,
     body.email, body.role];
@@ -42,13 +42,13 @@ export const addUser = async (body) => {
 
    const hashString = await hash(body.password, saltRounds);
    values.push(hashString);
-   values.push("No"); // For default approved state of No
+   values.push('Pending'); // For default approved state of No
 
    const insertQry = format(insertStr, fields.concat(values));
    await query(insertQry);
 
    user = await getUserByUsername(body.username);
-   console.log(user)
+   console.log(user);
    return user;
 };
 
