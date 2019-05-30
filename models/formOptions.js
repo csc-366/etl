@@ -44,7 +44,7 @@ export const getExistingRookeries = async () => {
    return (await query(format("SELECT * FROM Rookery")))[0];
 };
 
-export const addRookery = async (rookery, rookeryName) => {
+export const addNewRookery = async (rookery, rookeryName) => {
    await query(format("INSERT INTO Rookery (Rookery, RookeryName) " +
        "VALUES (?,?)", [rookery, rookeryName]));
 };
@@ -54,7 +54,7 @@ export const getExistingAgeClasses = async () => {
    return (await query(format("SELECT * FROM AgeClass")))[0];
 };
 
-export const addAgeClass = async (shortName, fullName) => {
+export const addNewAgeClass = async (shortName, fullName) => {
    await query(format("INSERT INTO AgeClass (ShortName, FullName) " +
        "VALUES (?,?)", [shortName, fullName]));
 };
@@ -64,7 +64,7 @@ export const getExistingAffiliations = async () => {
    return (await query(format("SELECT * FROM Affiliation")))[0];
 };
 
-export const addAffiliation = async (affiliation, description) => {
+export const addNewAffiliation = async (affiliation, description) => {
    if (description) {
       await query(format("INSERT INTO Affiliation (Affiliation, Description) " +
        "VALUES (?,?)", [affiliation, description]));
