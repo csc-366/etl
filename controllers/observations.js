@@ -33,7 +33,6 @@ export async function validateObservation(req, res) {
    // check for fully valid observation
    let validObservation = await isValidObservation(req.body);
 
-   console.log(validObservation)
    if (validObservation) {
       if (tag) {
          seal = await getSealsFromTag(tag);

@@ -30,7 +30,6 @@ export const rollback = async (connection) => {
 }
 
 export const query = async (q) => {
-   console.log(q);
    const connection = await pool.getConnection();
    try {
       return (await connection.query(q));
