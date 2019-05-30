@@ -10,9 +10,7 @@ import sessionsRouter from './routes/sessions';
 import usersRouter from './routes/users';
 import etlRouter from './routes/etl';
 import observationRouter from './routes/observations';
-import colorsRouter from './routes/colors';
-import locationsRouter from "./routes/locations";
-import tagPositionsRouter from "./routes/tagPositions";
+import formOptionsRouter from "./routes/formOptions";
 
 process.title = "SeaQL-backend";
 
@@ -39,8 +37,6 @@ app.use('/sessions', sessionsRouter);
 app.use('/users', usersRouter);
 app.use('/observations', observationRouter);
 app.use('/etl', etlRouter);
-app.use('/colors', colorsRouter);
-app.use('/locations', locationsRouter);
-app.use('/tagPositions', tagPositionsRouter);
+app.use('/formOptions', formOptionsRouter);
 
 module.exports = app;
