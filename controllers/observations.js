@@ -3,7 +3,7 @@ import {body, param, validationResult} from 'express-validator/check';
 import {
    getPendingObservations, isValidPending, isValidObservation
 } from "../models/observations";
-import {getSealsFromMark, getSealsFromTag} from "../models/seals";
+import {getSealFromMark, getSealFromTag} from "../models/seals";
 
 
 export async function pending(req, res) {
@@ -20,9 +20,9 @@ export async function pending(req, res) {
 }
 
 export async function validateObservation(req, res) {
-   let tag = req.body.tag;
-   let mark = req.body.mark;
    let seal;
+   const date = req.body.date && new Date(req.body.date);
+   const season = date && date.getFullYear();
    const errors = validationResult(req);
 
    if (!errors.isEmpty()) {
@@ -31,14 +31,14 @@ export async function validateObservation(req, res) {
    }
 
    // check for fully valid observation
-   let validObservation = await isValidObservation(req.body);
+   let matchingIds = await isValidObservation(req.body);
 
-   if (validObservation) {
-      if (tag) {
-         seal = await getSealsFromTag(tag);
+   if (matchingIds) {
+      if (matchingIds.tagNum) {
+         seal = await getSealFromTag(matchingIds.tagNum);
       }
-      else {
-         seal = await getSealsFromMark(mark);
+      else if (matchingIds.markNum) {
+         seal = await getSealFromMark(matchingIds.markNum, season);
       }
       sendData(res, seal);
       return;

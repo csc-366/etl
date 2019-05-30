@@ -17,9 +17,10 @@ export async function isValidObservation(body) {
       return false;
    }
 
-   if ((hasCompleteMark(marks) || hasCompleteTag(tags)) && hasNoInvalidMarks(marks)
-    && hasNoInvalidTags(tags)) {
-      return true;
+   let matchTagNum = hasCompleteTag(tags);
+   let matchMarkNum = hasCompleteMark(marks);
+   if ((matchTagNum || matchMarkNum) && hasNoInvalidMarks(marks) && hasNoInvalidTags(tags)) {
+      return {"tagNum": matchTagNum, "markNum": matchMarkNum}
    }
 
    return false;

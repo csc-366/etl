@@ -53,7 +53,7 @@ export function hasCompleteMark(marks) {
    marks.forEach((mark) => {
       if (COMPLETE_MARK_NUMBER_REGEX1.test(mark.number) ||
        COMPLETE_MARK_NUMBER_REGEX2.test(mark.number)) {
-         completeMatch = true;
+         completeMatch = mark.number;
       }
    });
 
