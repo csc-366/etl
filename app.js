@@ -14,6 +14,8 @@ import colorsRouter from './routes/colors';
 import locationsRouter from "./routes/locations";
 import tagPositionsRouter from "./routes/tagPositions";
 
+process.title = "SeaQL-backend";
+
 const app = express();
 
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}));

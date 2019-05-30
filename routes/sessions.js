@@ -2,7 +2,7 @@ import {Router} from 'express';
 import {
    validate,
    login,
-   getSession,
+   getSessions,
    logout
 } from '../controllers/sessions';
 
@@ -14,7 +14,7 @@ const sessionsRouter = Router();
 */
 
 sessionsRouter.post('/login', validate('login'), login);
-sessionsRouter.get('/', validate('getSession'), getSession);
+sessionsRouter.get('/', validate('getSessions'), getSessions);
 sessionsRouter.post('/', validate('logout'), logout);
 
 

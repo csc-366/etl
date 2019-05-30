@@ -42,7 +42,7 @@ export const addUser = async (body) => {
 
    const hashString = await hash(body.password, saltRounds);
    values.push(hashString);
-   values.push('Pending'); // For default approved state of No
+   values.push('Pending');
 
    const insertQry = format(insertStr, fields.concat(values));
    await query(insertQry);
@@ -53,8 +53,12 @@ export const addUser = async (body) => {
 };
 
 export const acceptUser = async (username) => {
-   const updateQry = format('UPDATE User SET Approved = ? WHERE Username = ?', ["Yes", username]);
-   console.log(updateQry);
-
-   let result = await query(updateQry);
+   await query(format('UPDATE User SET Status = ? WHERE Username = ?',
+    ["Active", username]));
 };
+
+export const deactivateUser = async (username) => {
+   await query(format('UPDATE User SET Status = ? WHERE Username = ?',
+    ["Deactivated", username]));
+};
+
