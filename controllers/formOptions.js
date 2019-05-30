@@ -1,8 +1,9 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, validationResult} from 'express-validator/check';
-import { addNewColor, addNewLocation, addNewTagPosition, getAllTagPositions,
-         getExistingAffiliations, getExistingAgeClasses, getExistingColors,
-         getExistingLocations, getExistingRookeries
+import {
+   addNewAffiliation, addNewAgeClass, addNewColor, addNewLocation, addNewRookery,
+   addNewTagPosition, getAllTagPositions, getExistingAffiliations, getExistingAgeClasses,
+   getExistingColors, getExistingLocations, getExistingRookeries
 } from "../models/formOptions";
 
 export async function getFormOptions(req, res) {
@@ -19,9 +20,6 @@ export async function getFormOptions(req, res) {
    const rookeries = await getExistingRookeries();
    const ageClasses = await getExistingAgeClasses();
    const affiliations = await getExistingAffiliations();
-
-   let data = {locations, positions, colors, rookeries, ageClasses, affiliations};
-   console.log(data);
 
    sendData(res, {locations, positions, colors, rookeries, ageClasses, affiliations})
 }
@@ -100,7 +98,7 @@ export async function addAgeClass(req, res) {
       return;
    }
 
-   let result = await addAgeClass(body.shortName, body.fullName);
+   let result = await addNewAgeClass(body.shortName, body.fullName);
 
    const ageClasses = await getExistingAgeClasses();
    sendData(res, ageClasses);
@@ -120,7 +118,7 @@ export async function addRookery(req, res) {
       return;
    }
 
-   let result = await addRookery(body.rookery, body.rookeryName);
+   let result = await addNewRookery(body.rookery, body.rookeryName);
 
    const rookeries = await getExistingRookeries();
    sendData(res, rookeries);
@@ -140,7 +138,7 @@ export async function addAffiliation(req, res) {
       return;
    }
 
-   let result = await addAffiliation(body.affiliation, body.description);
+   let result = await addNewAffiliation(body.affiliation, body.description);
 
    const affiliations = await getExistingAffiliations();
    sendData(res, affiliations);
@@ -222,4 +220,3 @@ export const validate = (method) => {
          return [];
    }
 };
-
