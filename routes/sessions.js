@@ -15,7 +15,7 @@ const sessionsRouter = Router();
 
 sessionsRouter.post('/login', validate('login'), login);
 sessionsRouter.get('/:cookie', validate('getSession'), getSession);
-sessionsRouter.delete('/:cookie', validate('logout'), logout);
+sessionsRouter.post('/:cookie', validate('logout'), logout);
 
 
 export default sessionsRouter;
