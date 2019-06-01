@@ -304,13 +304,3 @@ CREATE TABLE SealObservation (
 SELECT DISTINCT(t.ObservationId) FROM TagDeployment t WHERE t.ObservationId NOT IN (SELECT FirstObservation FROM Seal);
 SELECT * FROM Seal;
 
-
-SELECT * FROM Observation O
-    JOIN SealObservation SO on SO.ObservationId = O.ID
-    JOIN Seal S on S.FirstObservation = SO.SealId
-    WHERE S.FirstObservation = 1569;
-
-SELECT FirstObservation, Sex, `Procedure` FROM Seal S
-    JOIN TagDeployment TD on TD.SealId = S.FirstObservation
-    WHERE TD.TagNumber LIKE 'A16_'
-    GROUP BY S.FirstObservation

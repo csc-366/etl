@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use(sessionUtil.router);
-//app.use(sessionUtil.checkLogin);
+app.use(sessionUtil.checkLogin);
 
 app.use('/', indexRouter);
 app.use('/sessions', sessionsRouter);
