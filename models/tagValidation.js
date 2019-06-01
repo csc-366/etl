@@ -24,44 +24,47 @@ export function hasNoInvalidTags(tags) {
    return validsOnly;
 }
 
-export function hasPartialTag(tags) {
+export function getPartialTags(tags) {
    if (!tags || !tags.length) {
-      return false;
+      return [];
    }
 
-   let partialMatch = true;
+   let partialMatches = [];
 
+   // assume correct format, if any regx text fails, don't push to matches array
    tags.forEach((tag) => {
+      let match = true;
+
       if (!TAG_COLOR_REGEX.test(tag.color)) {
-         partialMatch = false;
+         match = false;
       } else if (tag.number.length !== 4 || !TAG_NUMBER_REGEX.test(tag.number)) {
-         partialMatch = false;
+         match = false;
       } else if (tag.position.length !== 5 || !TAG_POSITION_REGEX.test(tag.position)) {
-         partialMatch = false;
+         match = false;
+      }
+
+      if (match) {
+         partialMatches.push(tag.number)
       }
    });
 
-   if (partialMatch) {
-      return true;
-   }
-   return false;
+   return partialMatches;
 }
 
-export function hasCompleteTag(tags) {
-   let fullTag;
-
+export function getCompleteTags(tags) {
    if (!tags || !tags.length) {
-      return false;
+      return [];
    }
 
-   let completeMatch = false;
+   let completeMatches = [];
 
    tags.forEach((tag) => {
-      fullTag = tag.color + tag.number + tag.position;
+      let fullTag = tag.color + tag.number + tag.position;
+
       if (COMPLETE_TAG_REGEX.test(fullTag)) {
-         completeMatch = tag.number;
+         completeMatches.push(tag.number);
       }
    });
 
-   return completeMatch;
+   return completeMatches;
 }

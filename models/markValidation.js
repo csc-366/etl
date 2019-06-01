@@ -24,39 +24,45 @@ export function hasNoInvalidMarks(marks) {
    return validsOnly;
 }
 
-export function hasPartialMark(marks) {
+export function getPartialMarks(marks) {
    if (!marks || !marks.length) {
-      return false;
+      return [];
    }
 
-   let partialMatch = true;
+   let partialMatches = [];
 
    marks.forEach((mark) => {
+      let match = true;
+
       if (mark.number.length < 1 || mark.number.length > 6 ||
        (!MARK_NUMBER_REGEX1.test(mark.number) && !MARK_NUMBER_REGEX2.test(mark.number))) {
-         partialMatch = false;
+         match = false;
       } else if (mark.position && !MARK_POSITION_REGEX.test(mark.position)) {
-         partialMatch = false;
+         match = false;
+      }
+
+      if (match) {
+         partialMatches.push(mark.number);
       }
    });
 
-   return partialMatch;
+   return partialMatches;
 }
 
-export function hasCompleteMark(marks) {
+export function getCompleteMark(marks) {
    if (!marks || !marks.length) {
-      return false;
+      return [];
    }
 
-   let completeMatch = false;
+   let completeMatches = [];
 
    marks.forEach((mark) => {
       if (COMPLETE_MARK_NUMBER_REGEX1.test(mark.number) ||
        COMPLETE_MARK_NUMBER_REGEX2.test(mark.number)) {
-         completeMatch = mark.number;
+         completeMatches.push(mark.number);
       }
    });
 
-   return completeMatch;
+   return completeMatches;
 }
 
