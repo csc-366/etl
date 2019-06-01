@@ -1,6 +1,6 @@
 import { query, format, startTransaction, rollback} from './db2';
-import { hasCompleteMark, hasNoInvalidMarks, hasPartialMark } from "./markValidation";
-import { hasCompleteTag, hasNoInvalidTags, hasPartialTag } from "./tagValidation";
+import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./markValidation";
+import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tagValidation";
 
 export async function getPendingObservations(count, page) {
    let pendingList = await query(format("SELECT * FROM PendingObservations" +
@@ -9,25 +9,27 @@ export async function getPendingObservations(count, page) {
 }
 
 
-export async function isValidObservation(body) {
-   const tags = body.tags;
-   const marks = body.marks;
+export async function getCompleteIdentifiers(observation) {
+   const tags = observation.tags;
+   const marks = observation.marks;
 
-   if (!await isValidPending(body)) {
+   if (!await getPartialIdentifiers(observation)) {
       return false;
    }
 
-   let matchTagNum = hasCompleteTag(tags);
-   let matchMarkNum = hasCompleteMark(marks);
-   if ((matchTagNum || matchMarkNum) && hasNoInvalidMarks(marks) && hasNoInvalidTags(tags)) {
-      return {"tagNum": matchTagNum, "markNum": matchMarkNum}
+   let tagNumArray = getCompleteTags(tags);
+   let markNumArray = getCompleteMark(marks);
+
+   if ((tagNumArray.length || markNumArray.length) && hasNoInvalidMarks(marks)
+    && hasNoInvalidTags(tags)) {
+      return {"completeTags": tagNumArray, "completeMarks": markNumArray}
    }
 
-   return false;
+   return {"completeTags": [], "completeMarks": []}
 }
 
 
-export async function isValidPending(body) {
+export async function getPartialIdentifiers(body) {
    const date = new Date(body.date);
    const location = body.location;
 
@@ -39,11 +41,14 @@ export async function isValidPending(body) {
       return false;
    }
 
-   if (!hasNoInvalidMarks(body.marks) || !hasNoInvalidTags(body.tags)) {
-      return false;
+   const tagNumArray = getPartialTags(body.tags);
+   const markNumArray = getPartialMarks(body.marks);
+   if ((tagNumArray.length || markNumArray.length) && hasNoInvalidMarks(body.marks)
+    && hasNoInvalidTags(body.tags)) {
+      return {"partialTags": tagNumArray, "partialMarks": markNumArray};
    }
 
-   return (hasPartialMark(body.marks) || hasPartialTag(body.tags));
+   return {"partialTags": [], "partialMarks": []};
 }
 
 
@@ -55,26 +60,31 @@ export async function isValidDate(date) {
       return false;
    }
 
-   const result = await query(format("SELECT * FROM Season WHERE Year = ?",
-    [observationYear]));
-   const dateRange = result[0][0];
+   const result = (await query(format("SELECT * FROM Season WHERE Year = ?",
+    [observationYear])))[0];
+   const dateRange = result[0];
 
-   if (date < dateRange.Start || date > dateRange.End) {
-      return false;
-   }
-
-   return true;
+   return (date > dateRange.Start && date < dateRange.End);
 }
 
 
 export async function isValidLocation(location) {
-   const result = await query(format("SELECT * FROM Location WHERE Beach = ?",
-    [location]));
+   const result = (await query(format("SELECT * FROM Location WHERE Beach = ?",
+    [location])))[0];
 
-   if (result[0] && result[0].length) {
+   if (result.length) {
       return true;
-   }
-   else {
+   } else {
       return false;
    }
+}
+
+export async function getSealObservations(sealId) {
+   const queryString =
+    "SELECT * From Observation O " +
+      "JOIN SealObservation SO on SO.ObservationID = O.ID " +
+      "JOIN Seal S on S.FirstObservation = SO.SealID " +
+      "WHERE S.FirstObservation = ?";
+
+   return (await query(format(queryString, [sealId])))[0];
 }
