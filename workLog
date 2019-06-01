@@ -3,6 +3,8 @@ TODO:
     Update crypto module to remove deprecation warning
     Add image storage and retrieval.. S3 buckets?
     Refactor db.js in etl and db2.js in models. (Combine?)
-    Delete users. Switch them back to unapproved? Or make a new "Active" field?
     Time for isValidDate in models/observations is not UTC
     Add csv ingestion (with try catch block for non csv files)
+    Observations that have both a partial and complete are validated, when they
+        need to be put to pending, otherwise a partial ID will be in the
+        database?

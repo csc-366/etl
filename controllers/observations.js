@@ -4,7 +4,11 @@ import {
    getPendingObservations, getPartialIdentifiers, getCompleteIdentifiers,
    getSealObservations
 } from "../models/observations";
-import {getSealFromMark, getSealFromTag} from "../models/seals";
+import {
+   getSealFromMark,
+   getSealFromTag, getSealsFromPartialMark,
+   getSealsFromPartialTag
+} from "../models/seals";
 
 
 export async function pending(req, res) {
@@ -31,7 +35,7 @@ export async function validateObservation(req, res) {
    }
 
    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
-   markNums.season = season;
+   completeMarks.season = season;
 
    if (completeTags.length || completeMarks.length) {
       await respondWithSealMatches(res, completeTags, completeMarks);
@@ -40,14 +44,13 @@ export async function validateObservation(req, res) {
 
    // check for partially valid observation
    let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
+   partialMarks.season = season;
 
    if (partialTags.length || partialMarks.length) {
       await respondWithPotentialMatches(res, partialTags, partialMarks);
-      sendError(res, 400, "Partial observation. Valid as a pending" +
-       " observation")
    }
    else {
-      sendError(res, 400, `Invalid observation`);
+      sendError(res, 400, 'Invalid observation');
    }
 }
 
@@ -93,4 +96,30 @@ async function respondWithSealMatches(res, tagNums, markNums) {
     }
 }
 
+async function respondWithPotentialMatches(res, tagNums, markNums) {
+   let potentialSeals;
+   let observations = [];
+   let response = [];
 
+   if (tagNums.length) {
+      potentialSeals = await getSealsFromPartialTag(tagNums[0]);
+
+      for (let i = 0; i < potentialSeals.length; i ++) {
+         observations = await getSealObservations(potentialSeals[i].SealId);
+         response.push({seal: potentialSeals[i], sealObservations: observations});
+      }
+      sendData(res, response);
+   }
+   else if (markNums.length) {
+      potentialSeals = await getSealsFromPartialMark(markNums[0], markNums.season);
+
+      for (let i = 0; i < potentialSeals.length; i ++) {
+         observations = await getSealObservations(potentialSeals[i].SealId);
+         response.push({seal: potentialSeals[i], sealObservations: observations});
+      }
+      sendData(res, response);
+   }
+   else {
+      sendError(res, 500,  "Shouldn't have reached this code :(");
+    }
+}
