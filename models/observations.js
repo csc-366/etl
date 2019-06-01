@@ -13,8 +13,12 @@ export async function getCompleteIdentifiers(observation) {
    const tags = observation.tags;
    const marks = observation.marks;
 
-   if (!await getPartialIdentifiers(observation)) {
-      return false;
+   let {partialTags, partialMarks} = await getPartialIdentifiers(observation);
+
+   // since complete tags are basically a 'sub-category' of partial tags, if
+   // there are no partial tags, there must be no complete tags
+   if (!partialTags.length && !partialMarks.length) {
+      return {"completeTags": [], "completeMarks": []}
    }
 
    let tagNumArray = getCompleteTags(tags);
@@ -29,22 +33,22 @@ export async function getCompleteIdentifiers(observation) {
 }
 
 
-export async function getPartialIdentifiers(body) {
-   const date = new Date(body.date);
-   const location = body.location;
+export async function getPartialIdentifiers(observation) {
+   const date = new Date(observation.date);
+   const location = observation.location;
 
    if (!date || !(await isValidDate(date))) {
-      return false;
+      return {"partialTags": [], "partialMarks": []};
    }
 
    if (!location || !(await isValidLocation(location))){
-      return false;
+      return {"partialTags": [], "partialMarks": []};
    }
 
-   const tagNumArray = getPartialTags(body.tags);
-   const markNumArray = getPartialMarks(body.marks);
-   if ((tagNumArray.length || markNumArray.length) && hasNoInvalidMarks(body.marks)
-    && hasNoInvalidTags(body.tags)) {
+   const tagNumArray = getPartialTags(observation.tags);
+   const markNumArray = getPartialMarks(observation.marks);
+   if ((tagNumArray.length || markNumArray.length) && hasNoInvalidMarks(observation.marks)
+    && hasNoInvalidTags(observation.tags)) {
       return {"partialTags": tagNumArray, "partialMarks": markNumArray};
    }
 

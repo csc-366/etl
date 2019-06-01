@@ -37,6 +37,10 @@ export async function addColor(req, res) {
       return;
    }
 
+   if (req.body.colorName && req.body.colorName.length > 10) {
+      sendError(res, 400, "colorName is too long");
+   }
+
    let result = await addNewColor(req.body.color, req.body.colorName);
 
    const colors = await getExistingColors();
