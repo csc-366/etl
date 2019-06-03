@@ -24,7 +24,7 @@ export const ingestTags = async ({tags, connection}) => {
             continue;
         } else if (!TAG_POSITION_REGEX.test(position) && NATIONAL_TAG_POSITION_REGEX.test(position)) {
             position = (await query(connection, "SELECT Position FROM TagPosition WHERE NationalTagPosition=? LIMIT 1", [position]))[0].Position;
-        } else if (!COMPLETE_TAG_REGEX.test(tag)) {
+        } else if (!COMPLETE_TAG_REGEX.test(tag.color + tag.number)) {
             throw new Error("Incomplete Tag")
         }
 

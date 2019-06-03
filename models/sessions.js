@@ -7,6 +7,9 @@ export const credentialsAreValid = async (username, password) => {
    if (!user) {
       return null;
    }
+   else if (user.Status === "Pending" || user.Status === "Deactivated") {
+      return null;
+   }
 
    return await compare(password, user.PasswordHash);
 };

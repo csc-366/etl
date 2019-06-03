@@ -1,7 +1,8 @@
 import Router from 'express';
 import {validate} from '../controllers/observations'
 import {
-   pending
+   pending,
+   validateObservation
 } from "../controllers/observations";
 
 const observationsRouter = Router();
@@ -17,5 +18,7 @@ const observationsRouter = Router();
 */
 
 observationsRouter.get('/pending', validate('pending'), pending);
+
+observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
 
 export default observationsRouter;
