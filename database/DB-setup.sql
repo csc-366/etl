@@ -7,28 +7,29 @@ INSERT INTO Rookery (Rookery, RookeryName) VALUES ('PB', 'Piedras Blancas'), ('V
 
 CREATE TABLE Location (
   Beach   VARCHAR(6),
-  BeachName VARCHAR(24),
+  BeachName VARCHAR(48),
   Rookery VARCHAR(6),
   PRIMARY KEY (Beach),
   FOREIGN KEY (Rookery) REFERENCES Rookery(Rookery)
 );
 INSERT INTO Location (Beach, BeachName, Rookery) VALUES
-                                                        ('ACU','ACU','PB'),
-                                                        ('ACL','ACL','PB'),
-                                                        ('DCU','DCU','PB'),
-                                                        ('DCC','DCC','PB'),
-                                                        ('DCL','DCL','PB'),
-                                                        ('VP3DC','VP3DC','PB'),
-                                                        ('VP3U','VP3U','PB'),
-                                                        ('VP3L','VP3L','PB'),
-                                                        ('ALU','ALU','PB'),
-                                                        ('ALLn','ALLn','PB'),
-                                                        ('ALLs','ALLs','PB'),
-                                                        ('ALL','ALL','PB'),
-                                                        ('LTU','LTU','PB'),
-                                                        ('LTC','LTC','PB'),
-                                                        ('LTL','LTL','PB'),
-                                                        ('VAFB','VAFB','VAFB'),
+                                                        ('ACU','Arroyo del Corral, Upper','PB'),
+                                                        ('ACL','Arroyo del Corral, Lower','PB'),
+                                                        ('DCU','Dead Center, Upper','PB'),
+                                                        ('DCC','Dead Center, Center','PB'),
+                                                        ('DCL','Dead Center, Lower','PB'),
+                                                        ('VP3DC','Vista Point 3 to Dead Center','PB'),
+                                                        ('VP3U','Vista Point 3, Upper','PB'),
+                                                        ('VP3L','Vista Point 3, Lower','PB'),
+                                                        ('ALU','Arroyo Laguna, Upper','PB'),
+                                                        ('ALLn','Arroyo Laguna, Lower North','PB'),
+                                                        ('ALLs','Arroyo Laguna, Lower South','PB'),
+                                                        ('ALL','Arroyo Laguna','PB'),
+                                                        ('LTU','La Tortuga, Upper','PB'),
+                                                        ('LTC','La Tortuga, Center','PB'),
+                                                        ('LTL','La Tortuga, Lower','PB'),
+                                                        ('VAFB','Vandenberg Air Force Base','VAFB'),
+                                                        ('COVE', 'Cove', 'PB'),
 
                                                         ('LT','LT','PB'),
                                                         ('ALC','ALC','PB'),
@@ -54,6 +55,7 @@ CREATE TABLE Affiliation (
   Description VARCHAR(48),
   PRIMARY KEY (Affiliation)
 );
+INSERT INTO Affiliation (Affiliation, Description) VALUES ('None', 'No Affiliation');
 
 CREATE TABLE User (
   Username     VARCHAR(24),
@@ -92,16 +94,17 @@ CREATE TABLE Observer (
 CREATE TABLE AgeClass(
   ShortName VARCHAR(4),
   FullName VARCHAR(16),
+  Description VARCHAR(256) DEFAULT NULL,
   PRIMARY KEY (ShortName)
 );
-INSERT INTO AgeClass (ShortName, FullName) VALUES ('P', 'Pup'),
-                                                  ('W', 'Weanling'),
-                                                  ('J', 'Juvenile'),
-                                                  ('SA1', 'SubAdult 1'),
-                                                  ('SA2', 'SubAdult 2'),
-                                                  ('SA3', 'SubAdult 3'),
-                                                  ('SA4', 'SubAdult 4'),
-                                                  ('A', 'Adult')
+INSERT INTO AgeClass (ShortName, FullName, Description) VALUES ('P', 'Pup', 'Dependent pup, still with mom; black fur'),
+                                                               ('W', 'Weanling', 'Pup, no longer with mom; may have black or silver fur'),
+                                                               ('J', 'Juvenile', 'Yearling or juvenile; has left the beach for at least one feeding migration; coat can be yellowish (until after molt); longer than weanlings, smaller than adults'),
+                                                               ('SA1', 'SubAdult 1', 'No nose droop, no head shield; similar in size to adult female'),
+                                                               ('SA2', 'SubAdult 2', 'Nose droops but not to ground; no chest shield'),
+                                                               ('SA3', 'SubAdult 3', 'Light scarring; when lying down, nose touches the ground'),
+                                                               ('SA4', 'SubAdult 4', 'Chest shield not above eyes; notch across nose, but less pronounced than in adult males'),
+                                                               ('A', 'Adult', 'Female: no nose droop, daintier head structure than males; Male: heavy pink scarring, chest shield level with or above eyes')
 ;
 
 CREATE TABLE Observation (

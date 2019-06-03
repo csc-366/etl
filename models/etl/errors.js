@@ -1,0 +1,2 @@
+export const invalidLocation = 'Cannot add or update a child row: a foreign key constraint fails (`seals`.`Observation`, CONSTRAINT `Observation_ibfk_1` FOREIGN KEY (`Location`) REFERENCES `Location` (`Beach`))';
+export const invalidDate = "Incorrect date value: 'NaN-NaN-NaN' for column 'Date' at row 1";
