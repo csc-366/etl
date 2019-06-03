@@ -67,6 +67,12 @@ CREATE TABLE User (
   Affiliation  VARCHAR(24) DEFAULT 'None',
   Role         ENUM ('Admin', 'Scientist', 'Citizen Scientist'),
   Status       ENUM ('Active', 'Pending', 'Deactivated'),
+  CanAdd       ENUM ('Yes', 'No'),
+  CanApprove   ENUM ('Yes', 'No'),
+  CanModify    ENUM ('Yes', 'No'),
+  CanArchive   ENUM ('Yes', 'No'),
+  CanImport    ENUM ('Yes', 'No'),
+  CanExport    ENUM ('Yes', 'No'),
   PRIMARY KEY (Username),
   FOREIGN KEY (Affiliation) REFERENCES Affiliation(Affiliation)
 );
