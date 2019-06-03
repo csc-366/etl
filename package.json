@@ -7,8 +7,10 @@
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
-    "cors": "^2.8.5",
     "cookie-parser": "~1.4.3",
+    "cors": "^2.8.5",
+    "csv-parse": "^4.4.3",
+    "csv-parser": "^2.3.0",
     "csv-string": "^3.1.5",
     "debug": "~2.6.9",
     "dotenv": "^8.0.0",

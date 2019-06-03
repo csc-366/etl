@@ -1,5 +1,6 @@
 import {format, query} from './db';
 import {log} from '../../utils/dump';
+import {getName} from "../../utils/nameGenerator";
 
 const insertAgeClasses = async (connection, classes) => {
     const insertValues = classes.map(({shortName, fullName}) => {
@@ -61,7 +62,11 @@ export const ingestSeal = async ({sex, procedure = null, marks, tags, year, conn
     for (let i = 0; i < tags.length; i++) {
         const {tagNum, isNew} = tags[i];
         if (tagNum === 1 && isNew) {
-            await query(connection,"INSERT INTO Seal (FirstObservation, Sex, `Procedure`) VALUES (?,?,?)", [observationId, sex, procedure]);
+            const name = getName();
+            if(name === null) {
+                console.log('Null Name')
+            }
+            await query(connection,"INSERT INTO Seal (FirstObservation, Sex, Name, `Procedure`) VALUES (?,?,?,?)", [observationId, sex, name, procedure]);
             return (await query(connection, "SELECT LAST_INSERT_ID() as id"))[0].id;
         }
     }
@@ -70,7 +75,6 @@ export const ingestSeal = async ({sex, procedure = null, marks, tags, year, conn
             const {isNew, tag: {number}} = tags[i];
             if (!isNew && number) {
                 const results = (await query(connection, "SELECT SealId FROM TagDeployment WHERE TagNumber=? LIMIT 1", [number]))[0];
-                console.log(results);
                 if (results) {
                     return results.SealId;
                 }
