@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon --exec babel-node --inspect -- ./bin/www"
+    "start": "nodemon --exec babel-node --inspect -- ./bin/www",
+    "stop": "pkill --signal SIGINT SeaQL-backend"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",

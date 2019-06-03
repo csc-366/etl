@@ -1,6 +1,12 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, param, validationResult} from 'express-validator/check';
-import {acceptUser, getAllUsers, getUserByUsername, addUser} from '../models/users';
+import {
+   acceptUser,
+   getAllUsers,
+   getUserByUsername,
+   addUser,
+   deactivateUser
+} from '../models/users';
 
 export async function register(req, res) {
    const errors = validationResult(req);
@@ -21,7 +27,7 @@ export async function register(req, res) {
    sendData(res, user);
 }
 
-export async function getUser(req,res) {
+export async function getUser(req, res) {
    let username = req.params.username;
    const errors = validationResult(req);
 
@@ -45,7 +51,7 @@ export async function getUser(req,res) {
    }
 }
 
-export async function getUsers(req,res) {
+export async function getUsers(req, res) {
    const errors = validationResult(req);
 
    if (!errors.isEmpty()) {
@@ -63,11 +69,33 @@ export async function getUsers(req,res) {
    }
 }
 
-export async function deleteUser(req,res) {
+export async function deleteUser(req, res) {
+   let username = req.params.username;
+   const errors = validationResult(req);
 
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   let user = await getUserByUsername(username);
+
+   if (!user) {
+      sendError(res, 400, `${username} does not exist`);
+   }
+   else if (user.Status === "Deactivated"){
+      sendError(res, 400, `${username} is already deactivated`);
+   }
+
+   if (req.session.isAdmin() || username === user.Username) {
+      await deactivateUser(username);
+      sendData(res, `${username} successfully deleted.`)
+   } else {
+      sendError(res, 403, "Forbidden");
+   }
 }
 
-export async function updateUser(req,res) {
+export async function updateUser(req, res) {
 
 }
 
@@ -91,14 +119,14 @@ export async function approveUser(req,res) {
       sendError(res, 400, `${username} does not exist`);
    }
 
-   if (user.Approved === 'Yes') {
+   if (user.Status === 'Active') {
       sendError(res, 400, `${username} has already been approved`);
       return;
    }
 
    await acceptUser(username);
 
-   sendData(res, "Success")
+   sendData(res, `${username}'s account is now active`);
 
 }
 

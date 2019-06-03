@@ -1,5 +1,5 @@
 import {sendData, sendError} from '../utils/responseHelper';
-import {body, param, validationResult} from 'express-validator/check';
+import {body, validationResult} from 'express-validator/check';
 import {credentialsAreValid} from '../models/sessions';
 import {getUserByUsername} from "../models/users";
 import {makeSession, sessions} from "../utils/sessionUtil"
@@ -28,11 +28,21 @@ export async function login(req, res) {
    }
 }
 
+export async function getSessions(req,res) {
+   const errors = validationResult(req);
 
-export async function getSession(req,res) {
-   sendData(res, "Get session successful.");
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   if (req.session.isAdmin()) {
+      sendData(res, sessions);
+   }
+   else {
+      sendError(res, 403, "Forbidden");
+   }
 }
-
 
 export async function logout(req,res) {
    const errors = validationResult(req);
@@ -67,13 +77,10 @@ export const validate = (method) => {
              .isLength({min: 1})
              .withMessage("must be at least 1 character long")
          ];
-      case 'getSession':
+      case 'getSessions':
          return [];
       case 'logout':
-         return [
-            //param('cookies')
-            //.exists().withMessage("is required")
-         ];
+         return [];
 
       default:
          return [];
