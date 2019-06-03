@@ -3,7 +3,9 @@ import fs from 'fs';
 import {sendData, sendError} from "../utils/responseHelper";
 import {ingest} from "../models/etl/db";
 import {promisify} from "util";
+
 const unlink = promisify(fs.unlink);
+
 export async function etlIngest(req, res) {
     if (!req.file || !req.file.path) {
         sendError(res, 400, "Could not find file.");
@@ -14,7 +16,7 @@ export async function etlIngest(req, res) {
 
     let data, parseErrors;
     try {
-        [data,parseErrors] = await parse(filename);
+        [data, parseErrors] = await parse(filename);
     } catch (e) {
         sendError(res, 500, `${e.message}`);
         throw e;
