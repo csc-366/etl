@@ -52,6 +52,11 @@ export const addUser = async (body) => {
    return user;
 };
 
+export const setDBUserStatus = async (username, status) => {
+   await query(format('UPDATE User SET Status = ? WHERE Username = ?',
+       [status, username]))
+};
+
 export const acceptUser = async (username) => {
    await query(format('UPDATE User SET Status = ? WHERE Username = ?',
     ["Active", username]));
