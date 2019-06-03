@@ -1,12 +1,12 @@
 import {Router} from 'express';
 import {
-   validate,
-   register,
-   getUser,
-   getUsers,
-   deleteUser,
-   updateUser,
-   approveUser
+    validate,
+    register,
+    getUser,
+    getUsers,
+    deleteUser,
+    updateUser,
+    setUserStatus
 } from '../controllers/users';
 
 const usersRouter = Router();
@@ -24,6 +24,6 @@ usersRouter.get('/', validate('getUser'), getUsers);
 usersRouter.delete('/:username', validate('deleteUser'), deleteUser);
 usersRouter.put('/:username', validate('updateUser'), updateUser);
 
-usersRouter.patch('/approve/:username', validate('approveUser'), approveUser);
+usersRouter.patch('/status/:username', validate('userStatus'), setUserStatus);
 
 module.exports = usersRouter;
