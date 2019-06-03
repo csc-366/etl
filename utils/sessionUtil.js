@@ -18,6 +18,12 @@ let Session = function(user) {
    this.lastName = user.LastName;
    this.email = user.Email;
    this.role = user.Role;
+   this.canAdd = user.CanAdd;
+   this.canApprove = user.CanApprove;
+   this.canModify = user.CanModify;
+   this.canArchive = user.CanArchive;
+   this.canImport = user.CanImport;
+   this.canExport = user.CanExport;
    this.loginTime = new Date().getTime();
    this.lastUsed = new Date().getTime();
 };
