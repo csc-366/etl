@@ -2,14 +2,11 @@ import {sendData, sendError} from "../utils/responseHelper";
 import {body, param, validationResult} from 'express-validator/check';
 import {
    getPendingObservations, getPartialIdentifiers, getCompleteIdentifiers,
-   getSealObservations
+   getSealObservations, getPendingCount
 } from "../models/observations";
 import {
-   getSealFromMark,
-   getSealFromTag, getSealsFromPartialMark,
-   getSealsFromPartialTag
+   getSealFromMark, getSealFromTag, getSealsFromPartialMark, getSealsFromPartialTag
 } from "../models/seals";
-
 
 export async function pending(req, res) {
    const errors = validationResult(req);
@@ -23,6 +20,21 @@ export async function pending(req, res) {
 
    sendData(res, pendingList);
 }
+
+export async function pendingCount(req, res) {
+   const errors = validationResult(req);
+
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   const pendingCount = await getPendingCount();
+
+   sendData(res, pendingCount);
+
+}
+
 
 export async function validateObservation(req, res) {
    const date = req.body.date && new Date(req.body.date);
@@ -58,10 +70,11 @@ export const validate = (method) => {
    switch (method) {
       case 'pending':
          return [];
+      case 'pendingCount':
+         return [];
       case 'validateObservation':
          return [];
    }
-
 }
 
 // TODO: If there are multiple valid tags or multiple valid marks, this code

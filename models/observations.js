@@ -8,6 +8,10 @@ export async function getPendingObservations(count, page) {
    return pendingList[0];
 }
 
+export async function getPendingCount() {
+   return (await query(format("SELECT COUNT(*) AS Count FROM" +
+    " PendingObservations")))[0][0];
+}
 
 export async function getCompleteIdentifiers(observation) {
    const tags = observation.tags;
@@ -76,11 +80,7 @@ export async function isValidLocation(location) {
    const result = (await query(format("SELECT * FROM Location WHERE Beach = ?",
     [location])))[0];
 
-   if (result.length) {
-      return true;
-   } else {
-      return false;
-   }
+   return (result.length) ? true : false;
 }
 
 export async function getSealObservations(sealId) {
