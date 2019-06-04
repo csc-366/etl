@@ -1,5 +1,6 @@
 import {query, format} from './db2';
 import {hash} from 'bcrypt';
+import {getExistingAffiliations} from "./formOptions";
 
 const saltRounds = 10;
 
@@ -28,11 +29,12 @@ export const getAllUsers = async () => {
 };
 
 export const addUser = async (body) => {
-   const insertStr = `INSERT INTO User (??,??,??,??,??,??,??) VALUES (?,?,?,?,?,?,?)`;
-   const fields = ["Username", "FirstName", "LastName", "Email", "Role", "PasswordHash", "Status"];
-
-   let values = [body.username, body.firstName, body.lastName,
-    body.email, body.role];
+   const insertStr = `INSERT INTO User (??,??,??,??,??,??,??,??) VALUES 
+      (?,?,?,?,?,?,?,?)`;
+   const fields = ["Username", "FirstName", "LastName", "Email", "Role",
+      "Affiliation", "PasswordHash", "Status"];
+   let values = [body.username, body.firstName, body.lastName, body.email,
+      body.role, body.affiliation];
 
    let user = await getUserByUsername(body.username);
 
