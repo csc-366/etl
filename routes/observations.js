@@ -2,6 +2,7 @@ import Router from 'express';
 import {validate} from '../controllers/observations'
 import {
    pending,
+   pendingCount,
    validateObservation
 } from "../controllers/observations";
 
@@ -18,6 +19,7 @@ const observationsRouter = Router();
 */
 
 observationsRouter.get('/pending', validate('pending'), pending);
+observationsRouter.get('/count', validate('pendingCount'), pendingCount);
 
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
 
