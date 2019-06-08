@@ -1,9 +1,5 @@
 import Router from 'express';
-import {validate} from '../controllers/observations'
-import {
-   pending,
-   validateObservation
-} from "../controllers/observations";
+import {singlePending, count, validate, pending, validateObservation, all} from '../controllers/observations'
 
 const observationsRouter = Router();
 
@@ -17,8 +13,10 @@ const observationsRouter = Router();
  *        clumped together in a filtration utility.
 */
 
+observationsRouter.get('/all', validate('all'), all);
 observationsRouter.get('/pending', validate('pending'), pending);
-
+observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
+observationsRouter.get('/count', validate('count'), count);
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
 
 export default observationsRouter;

@@ -2,12 +2,26 @@ import { query, format, startTransaction, rollback} from './db2';
 import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./markValidation";
 import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tagValidation";
 
-export async function getPendingObservations(count, page) {
-   let pendingList = await query(format("SELECT * FROM PendingObservations" +
-   " LIMIT ?,?", [parseInt(page), parseInt(count)]));
+export async function getPendingObservations(count=-1, page=-1) {
+   let pendingList;
+   if (count < 0 || page < 0) {
+       pendingList = await query(format("SELECT * FROM PendingObservations"));
+   } else {
+       pendingList = await query(format("SELECT * FROM PendingObservations" +
+           " LIMIT ?,?", [parseInt(page), parseInt(count)]));
+   }
    return pendingList[0];
 }
 
+export async function getPendingObservation(id) {
+   const pendingObservation = (await query(format("SELECT * FROM PendingObservations WHERE ObservationId=?", [id])));
+   return pendingObservation[0][0];
+}
+
+export const getPendingObservationsCount = async () => {
+   let pendingCount = await query("SELECT COUNT(*) as count from PendingObservations");
+   return pendingCount[0][0];
+};
 
 export async function getCompleteIdentifiers(observation) {
    const tags = observation.tags;
