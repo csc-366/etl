@@ -1,6 +1,7 @@
 import { query, format, startTransaction, rollback} from './db2';
 import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./marks";
 import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tags";
+import { appendQueryConditions } from "../utils/filtration";
 
 export async function getPendingObservations(count, page) {
    let pendingList = await query(format("SELECT * FROM PendingObservations" +
@@ -114,4 +115,21 @@ export async function insertSealObservation(observationId, sealId) {
    const queryString = "INSERT INTO SealObservation " +
     "(ObservationId, SealId) VALUES (?,?)";
 
-   await query(format(queryString, [observationId, sealId]));}
+   await query(format(queryString, [observationId, sealId]));
+}
+
+export async function getObservationsWithFilters(filters) {
+   let queryString = "SELECT * FROM Observation ";
+
+   let updatedQuery = appendQueryConditions('observations', queryString, filters);
+
+   return (await query(updatedQuery))[0];
+}
+
+export async function getPendingWithFilters(filters) {
+   let queryString = "SELECT * FROM PendingObservations ";
+
+   let updatedQuery = appendQueryConditions('pending', queryString, filters);
+
+   return (await query(updatedQuery))[0];
+}

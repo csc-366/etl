@@ -5,7 +5,9 @@ import {
    submitObservation,
    validateObservation,
    validate,
-   getMeasurements
+   getMeasurements,
+   getFilteredObservations,
+   getFilteredPending
 } from "../controllers/observations";
 
 const observationsRouter = Router();
@@ -22,6 +24,8 @@ const observationsRouter = Router();
 
 observationsRouter.get('/getPending', validate('getPending'), getPending);
 observationsRouter.get('/count', validate('pendingCount'), pendingCount);
+observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
+observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
 
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
 

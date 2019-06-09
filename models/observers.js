@@ -8,5 +8,5 @@ export async function getObserver(email) {
 }
 
 export async function insertObserver(email) {
-   await query(format("INSERT INTO Observer (email) VALUES (?)", [email]))
+   await query(format("INSERT INTO Observer (Email) VALUES (?)", [email]))
 }
