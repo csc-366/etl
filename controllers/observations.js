@@ -66,15 +66,20 @@ export async function getFilteredPending(req, res) {
    const location = req.query.location;
    const startDate = req.query.startDate;
    const endDate = req.query.endDate;
-   const observer = req.query.observer;
-   const ageClass = req.query.ageClass;
+   const fieldLeaders = req.query.fieldLeaders;
    const sex = req.query.sex;
+   const pupCount = req.query.pupCount;
    const lowerMoltLimit = req.query.lowerMoltLimit;
    const upperMoltLimit = req.query.upperMoltLimit;
 
+   let ageClass = req.query.ageClass;
+   if (req.query.hasOwnProperty('pupAge')){
+      ageClass = req.query.pupAge;
+   }
+
    const pending = await getPendingWithFilters({location,
-      startDate, endDate, observer, ageClass, sex, lowerMoltLimit,
-      upperMoltLimit});
+      startDate, endDate, fieldLeaders, ageClass, sex, pupCount,
+      lowerMoltLimit, upperMoltLimit});
 
    sendData(res, pending)
 }

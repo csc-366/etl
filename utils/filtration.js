@@ -14,12 +14,11 @@ const observationFilterConditions = {
 
 const pendingFilterConditions = {
    location: " Location = ?",
-   fieldLeaders: " FieldLeaders LIKE %?%",
+   fieldLeaders: " FieldLeaders LIKE ?",
    startDate: " Date >= ?",
    endDate: " Date <= ?",
    sex: " Sex = ?",
    ageClass: " Age = ?",
-   pupAge: " Age = ?",
    pupCount: " PupCount = ?",
    lowerMoltLimit: " MoltPercentage >= ?",
    upperMoltLimit: " MoltPercentage <= ?",
@@ -40,6 +39,11 @@ export function appendQueryJoins(queryString, filters) {
 
 export function appendQueryConditions(type, queryString, filters) {
    let filterValues = [];
+
+   if (filters.fieldLeaders) {
+      filters.fieldLeaders = "%" + filters.fieldLeaders + "%";
+   }
+
    queryString += " WHERE";
 
    switch (type) {
