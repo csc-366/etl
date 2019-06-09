@@ -7,7 +7,7 @@ import {
    getSealObservations,
    getPendingCount,
    insertObservation,
-   insertSealObservation
+   insertSealObservation, getObservationsWithFilters, getPendingWithFilters
 } from "../models/observations";
 import {
    addNewSeal,
@@ -46,6 +46,37 @@ export async function pendingCount(req, res) {
    const pendingCount = await getPendingCount();
 
    sendData(res, pendingCount);
+}
+
+export async function getFilteredObservations(req, res) {
+   const location = req.query.location;
+   const startDate = req.query.startDate;
+   const endDate = req.query.endDate;
+   const observer = req.query.observer;
+   const ageClass = req.query.ageClass;
+
+   const observations = await getObservationsWithFilters({location,
+      startDate, endDate, observer, ageClass});
+
+   sendData(res, observations)
+}
+
+
+export async function getFilteredPending(req, res) {
+   const location = req.query.location;
+   const startDate = req.query.startDate;
+   const endDate = req.query.endDate;
+   const observer = req.query.observer;
+   const ageClass = req.query.ageClass;
+   const sex = req.query.sex;
+   const lowerMoltLimit = req.query.lowerMoltLimit;
+   const upperMoltLimit = req.query.upperMoltLimit;
+
+   const pending = await getPendingWithFilters({location,
+      startDate, endDate, observer, ageClass, sex, lowerMoltLimit,
+      upperMoltLimit});
+
+   sendData(res, pending)
 }
 
 export async function validateObservation(req, res) {
@@ -100,7 +131,7 @@ export async function submitObservation(req, res) {
    if (body.observer) {
       existingObserver = await getObserver(body.observer);
    }
-   if (!existingObserver) {
+   if (!existingObserver && body.observer) {
       await insertObserver(body.observer);
    }
 
@@ -167,6 +198,10 @@ export const validate = (method) => {
          return [];
       case 'validateObservation':
          return [];
+      case 'getFilteredObservations':
+         return [];
+      case 'getFilteredPending':
+         return [];
       case 'submitObservation':
          //TODO: make sure it is a valid date
          return [
@@ -176,10 +211,7 @@ export const validate = (method) => {
                .withMessage("must be at least 1 character long"),
          ];
       case "getMeasurements":
-         return [
-          param('id')
-           .exists().withMessage("is required")
-         ];
+         return [];
    }
 };
 

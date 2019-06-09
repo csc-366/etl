@@ -30,6 +30,7 @@ export const ingestTags = async ({tags, connection}) => {
 
         const {color, number} = tag;
         try {
+            console.log(tag);
             await query(connection,"INSERT INTO Tag (Number, Color, Position) VALUES (?,?,?)", [number, color, position]);
         } catch (e) {
             throw new Error("Invalid Tag Component(s)");
