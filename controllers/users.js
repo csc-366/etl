@@ -25,7 +25,7 @@ export async function register(req, res) {
       });
 
       if (!selectedAffiliation.length) {
-         sendError(res, 400, `The affiliation '${req.body.affiliation}' does not exist`);
+         sendError(res, 400, [`The affiliation '${req.body.affiliation}' does not exist`]);
       }
    } else {
       req.body.affiliation = "None";
@@ -35,7 +35,7 @@ export async function register(req, res) {
 
     if (user === null) {
         sendError(res, 400,
-            `A username with ${req.body.username} already exists`);
+            [`A username with ${req.body.username} already exists`]);
         return;
     }
 
@@ -62,7 +62,7 @@ export async function getUser(req, res) {
         }
     }
     else {
-        sendError(res, 403, "Forbidden");
+        sendError(res, 403, ["Must be admin or requested user"]);
     }
 }
 
@@ -80,7 +80,7 @@ export async function getUsers(req, res) {
         sendData(res, users);
     }
     else {
-        sendError(res, 403, "Forbidden");
+        sendError(res, 403, ["Must be admin"]);
     }
 }
 
@@ -96,17 +96,17 @@ export async function deleteUser(req, res) {
     let user = await getUserByUsername(username);
 
     if (!user) {
-        sendError(res, 400, `${username} does not exist`);
+        sendError(res, 400, [`${username} does not exist`]);
     }
     else if (user.Status === "Deactivated") {
-        sendError(res, 400, `${username} is already deactivated`);
+        sendError(res, 400, [`${username} is already deactivated`]);
     }
 
     if (req.session.isAdmin() || username === user.Username) {
         await deactivateUser(username);
         sendData(res, `${username} successfully deleted.`)
     } else {
-        sendError(res, 403, "Forbidden");
+        sendError(res, 403, ["Must be admin or requested user"]);
     }
 }
 
@@ -125,25 +125,25 @@ export async function setUserStatus(req, res) {
     const {status} = req.body;
 
     if (!req.session.isAdmin()) {
-        sendError(res, 403, `Must be admin to approve users`);
+        sendError(res, 403, [`Must be admin to approve users`]);
         return;
     }
 
     let user = await getUserByUsername(username);
 
     if (!user) {
-        sendError(res, 400, `${username} does not exist`);
+        sendError(res, 400, [`${username} does not exist`]);
         return;
     }
 
     if (user.Status === status) {
-        sendError(res, 400, `${username} is already ${status}`);
+        sendError(res, 400, [`${username} is already ${status}`]);
         return;
     }
 
     await setDBUserStatus(username, status);
 
-    sendData(res, `${username}'s account status set to ${status}`);
+    sendData(res, [`${username}'s account status set to ${status}`]);
 }
 
 export const validate = (method) => {
