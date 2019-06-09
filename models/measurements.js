@@ -12,3 +12,11 @@ export async function insertMeasurement(observationId, measurement) {
 
    await query(format(queryString, [observationId, sl, cl, ag, tm, mt]));
 }
+
+export async function selectMeasurement(observationId) {
+   const queryString = "SELECT * FROM Measurement WHERE ObservationId = ?";
+
+   const measurement = (await query(format(queryString, [observationId])))[0];
+
+   return measurement.length ? measurement : null;
+}

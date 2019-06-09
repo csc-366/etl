@@ -20,7 +20,7 @@ import {insertPupAge, insertPupCount} from "../models/pups";
 import {getMark, insertMarks} from "../models/marks";
 import {insertTags, getTag} from "../models/tags";
 import {getObserver, insertObserver} from "../models/observers";
-import {insertMeasurement} from "../models/measurements";
+import {insertMeasurement, selectMeasurement} from "../models/measurements";
 
 export async function getPending(req, res) {
    const errors = validationResult(req);
@@ -142,6 +142,22 @@ export async function submitObservation(req, res) {
    sendData(res, observations);
 }
 
+export async function getMeasurements(req, res) {
+   const measurements = await selectMeasurement(req.params.observationId);
+
+   if (measurements) {
+      sendData(res, measurements);
+   }
+   else {
+      sendData(res, {
+         ObservationId: observationId,
+         StandardLength: null,
+         CurvilinearLength: null,
+         AxillaryGirth: null,
+         TotalMass: null,
+         MassTare: null});
+   }
+}
 
 export const validate = (method) => {
    switch (method) {
@@ -158,7 +174,12 @@ export const validate = (method) => {
                .exists().withMessage("is required")
                .isLength({min: 1})
                .withMessage("must be at least 1 character long"),
-         ]
+         ];
+      case "getMeasurements":
+         return [
+          param('id')
+           .exists().withMessage("is required")
+         ];
    }
 };
 
@@ -221,7 +242,6 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
        " found in observation"])
     }
 }
-
 
 async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
 
