@@ -19,6 +19,7 @@ import {
 import {insertPupAge, insertPupCount} from "../models/pups";
 import {getMark, insertMarks} from "../models/marks";
 import {insertTags, getTag} from "../models/tags";
+import {getObserver} from "../models/observers";
 
 export async function getPending(req, res) {
    const errors = validationResult(req);
@@ -86,6 +87,7 @@ export async function submitObservation(req, res) {
    const date = body.date && new Date(body.date);
    const season = date && date.getFullYear();
    const errors = validationResult(req);
+   let existingObserver;
    let seal;
    let sealId;
 
@@ -93,7 +95,13 @@ export async function submitObservation(req, res) {
       sendError(res, 400, errors.array());
       return;
    }
-   // TODO: handle observers
+
+   if (body.observer) {
+      existingObserver = await getObserver(body.observer);
+   }
+   if (!existingObserver) {
+      await insertObserver(body.observer);
+   }
 
    const observationId = await insertObservation(body, req.session.username);
 
