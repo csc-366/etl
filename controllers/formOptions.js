@@ -7,13 +7,18 @@ import {
    addNewLocation,
    addNewRookery,
    addNewTagPosition,
-   delColor, delLocation,
    getExistingTagPositions,
    getExistingAffiliations,
    getExistingAgeClasses,
    getExistingColors,
    getExistingLocations,
-   getExistingRookeries, delRookery, delAffiliation, delAgeClass, delTagPosition
+   getExistingRookeries,
+   delRookery,
+   delAffiliation,
+   delAgeClass,
+   delTagPosition,
+   delColor,
+   delLocation
 } from "../models/formOptions";
 
 export async function getFormOptions(req, res) {

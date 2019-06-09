@@ -1,6 +1,6 @@
 import { query, format, startTransaction, rollback} from './db2';
-import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./markValidation";
-import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tagValidation";
+import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./marks";
+import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tags";
 
 export async function getPendingObservations(count, page) {
    let pendingList = await query(format("SELECT * FROM PendingObservations" +
@@ -85,10 +85,33 @@ export async function isValidLocation(location) {
 
 export async function getSealObservations(sealId) {
    const queryString =
-    "SELECT * From Observation O " +
+    "SELECT O.* From Observation O " +
       "JOIN SealObservation SO on SO.ObservationID = O.ID " +
       "JOIN Seal S on S.FirstObservation = SO.SealID " +
       "WHERE S.FirstObservation = ?";
 
    return (await query(format(queryString, [sealId])))[0];
 }
+
+export async function insertObservation(obs, submitterName) {
+   // optional fields must be set to null in case they are undefined
+   const observer = obs.observer ? obs.observer : null;
+   const ageClass = obs.ageClass ? obs.ageClass : null;
+   const moltPercentage = obs.moltPercentage ? obs.moltPercentage : null;
+   const comments = obs.comments ? obs.comments : null;
+
+   const queryString =
+    "INSERT INTO Observation (Date, Location, SubmittedBy, Observer, AgeClass, " +
+    "MoltPercentage, Comments) VALUES (?,?,?,?,?,?,?)";
+
+   const result = await query(format(queryString, [obs.date, obs.location, submitterName,
+      observer, ageClass, moltPercentage, comments]));
+
+   return result[0].insertId;
+}
+
+export async function insertSealObservation(observationId, sealId) {
+   const queryString = "INSERT INTO SealObservation " +
+    "(ObservationId, SealId) VALUES (?,?)";
+
+   await query(format(queryString, [observationId, sealId]));}
