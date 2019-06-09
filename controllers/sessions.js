@@ -56,7 +56,7 @@ export async function logout(req,res) {
    let logoutSsn = sessions[req.cookies.SeaQLAuth];
 
    if (logoutSsn && (logoutSsn.username === reqSsn.username)) {
-      sendData(res, "Logout successful.");
+      sendData(res, ["Logout successful."]);
    }
    else {
       sendError(res, 400, ["Logout failure."])

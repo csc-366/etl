@@ -104,7 +104,7 @@ export async function deleteUser(req, res) {
 
     if (req.session.isAdmin() || username === user.Username) {
         await deactivateUser(username);
-        sendData(res, `${username} successfully deleted.`)
+        sendData(res, [`${username} successfully deleted.`])
     } else {
         sendError(res, 403, ["Must be admin or requested user"]);
     }

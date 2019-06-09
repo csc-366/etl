@@ -20,6 +20,7 @@ import {insertPupAge, insertPupCount} from "../models/pups";
 import {getMark, insertMarks} from "../models/marks";
 import {insertTags, getTag} from "../models/tags";
 import {getObserver, insertObserver} from "../models/observers";
+import {insertMeasurement} from "../models/measurements";
 
 export async function getPending(req, res) {
    const errors = validationResult(req);
@@ -119,6 +120,9 @@ export async function submitObservation(req, res) {
    if (!seal) {
       await addNewSeal(observationId, body.sex, body.procedure);
       sealId = observationId;
+   }
+   if (body.measurement) {
+      await insertMeasurement(observationId, body.measurement);
    }
    if (body.pupAge) {
       await insertPupAge(observationId, body.pupAge);
