@@ -19,7 +19,7 @@ import {
 import {insertPupAge, insertPupCount} from "../models/pups";
 import {getMark, insertMarks} from "../models/marks";
 import {insertTags, getTag} from "../models/tags";
-import {getObserver} from "../models/observers";
+import {getObserver, insertObserver} from "../models/observers";
 
 export async function getPending(req, res) {
    const errors = validationResult(req);
@@ -136,7 +136,6 @@ export async function submitObservation(req, res) {
    await insertSealObservation(observationId, sealId);
    const observations = await getSealObservations(sealId);
    sendData(res, observations);
-
 }
 
 
