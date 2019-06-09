@@ -1,14 +1,26 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, param, validationResult} from 'express-validator/check';
 import {
-   getPendingObservations, getPartialIdentifiers, getCompleteIdentifiers,
-   getSealObservations, getPendingCount
+   getPendingObservations,
+   getPartialIdentifiers,
+   getCompleteIdentifiers,
+   getSealObservations,
+   getPendingCount,
+   insertObservation,
+   insertSealObservation
 } from "../models/observations";
 import {
-   getSealFromMark, getSealFromTag, getSealsFromPartialMark, getSealsFromPartialTag
+   addNewSeal,
+   getSealFromMark,
+   getSealFromTag,
+   getSealsFromPartialMark,
+   getSealsFromPartialTag
 } from "../models/seals";
+import {insertPupAge, insertPupCount} from "../models/pups";
+import {getMark, insertMarks} from "../models/marks";
+import {insertTags, getTag} from "../models/tags";
 
-export async function pending(req, res) {
+export async function getPending(req, res) {
    const errors = validationResult(req);
 
    if (!errors.isEmpty()) {
@@ -32,9 +44,7 @@ export async function pendingCount(req, res) {
    const pendingCount = await getPendingCount();
 
    sendData(res, pendingCount);
-
 }
-
 
 export async function validateObservation(req, res) {
    const date = req.body.date && new Date(req.body.date);
@@ -49,6 +59,10 @@ export async function validateObservation(req, res) {
    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
    completeMarks.season = season;
 
+   if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
+      return;
+   }
+
    if (completeTags.length || completeMarks.length) {
       await respondWithSealMatches(res, completeTags, completeMarks);
       return;
@@ -62,25 +76,83 @@ export async function validateObservation(req, res) {
       await respondWithPotentialMatches(res, partialTags, partialMarks);
    }
    else {
-      sendError(res, 400, 'Invalid observation');
+      sendError(res, 400, 'Invalid observation. Bad mark or tag format.');
    }
 }
 
+// assumes that error checking by validateObservation has already been done
+export async function submitObservation(req, res) {
+   const body = req.body;
+   const date = body.date && new Date(body.date);
+   const season = date && date.getFullYear();
+   const errors = validationResult(req);
+   let seal;
+   let sealId;
+
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+   // TODO: handle observers
+
+   const observationId = await insertObservation(body, req.session.username);
+
+   if (body.tags && body.tags.length) {
+      seal = await getSealFromTag(body.tags[0].number);
+      sealId = seal && seal.FirstObservation;
+   } else if (body.marks && body.marks.length) {
+      seal = await getSealFromMark(body.marks[0].number, season);
+      sealId = seal && seal.FirstObservation;
+   } else {
+      sendError(res, 400, "Could not add seal to database. No marks or tags" +
+       " found")
+   }
+
+   if (!seal) {
+      await addNewSeal(observationId, body.sex, body.procedure);
+      sealId = observationId;
+   }
+   if (body.pupAge) {
+      await insertPupAge(observationId, body.pupAge);
+   }
+   if (body.pupCount) {
+      await insertPupCount(observationId, body.pupCount);
+   }
+   if (body.marks && body.marks.length) {
+      await insertMarks(observationId, body.marks, season, sealId);
+   }
+   if (body.tags && body.tags.length) {
+      await insertTags(observationId, body.tags, sealId);
+   }
+
+   await insertSealObservation(observationId, sealId);
+   const observations = await getSealObservations(sealId);
+   sendData(res, observations);
+
+}
+
+
 export const validate = (method) => {
    switch (method) {
-      case 'pending':
+      case 'getPending':
          return [];
       case 'pendingCount':
          return [];
       case 'validateObservation':
          return [];
+      case 'submitObservation':
+         //TODO: make sure it is a valid date
+         return [
+            body('date')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+         ]
    }
-}
+};
 
 // TODO: If there are multiple valid tags or multiple valid marks, this code
 //  only returns the seal associated with the first tag or mark in the array.
-//  I don't trust the data enough to expect that a only a single seal will
-//  match... but for now this is the case.
 async function respondWithSealMatches(res, tagNums, markNums) {
    let seal, sealObservations;
 
@@ -105,7 +177,8 @@ async function respondWithSealMatches(res, tagNums, markNums) {
       }
    }
    else {
-      sendError(res, 500,  "Shouldn't have reached this code :(");
+      sendError(res, 500,  "Could not find any marks or tags " +
+       "in the observation")
     }
 }
 
@@ -133,6 +206,31 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
       sendData(res, response);
    }
    else {
-      sendError(res, 500,  "Shouldn't have reached this code :(");
+      sendError(res, 500,  "Could not find any marks or tags " +
+       "in the observation")
     }
+}
+
+
+async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
+
+   for (let i = 0; i < completeTags.length; i++) {
+      let tag = await getTag(completeTags[i]);
+      if (tag && req.body.tags[i].isNew) {
+         console.log('tag already exists')
+         sendError(res, 400, 'Invalid observation. A tag that ' +
+          'is listed as new already exists in the database.');
+         return true;
+      }
+   }
+   for (let i = 0; i < completeMarks.length; i++) {
+      let mark = await getMark(completeMarks[i], completeMarks.season);
+      if (mark && req.body.marks[i].isNew) {
+         console.log('mark already exists')
+         sendError(res, 400, 'Invalid observation. A mark ' +
+          'that is listed as new already exists in the database.');
+         return true;
+      }
+   }
+   return false;
 }
