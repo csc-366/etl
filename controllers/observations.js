@@ -77,7 +77,7 @@ export async function validateObservation(req, res) {
       await respondWithPotentialMatches(res, partialTags, partialMarks);
    }
    else {
-      sendError(res, 400, 'Invalid observation. Bad mark or tag format.');
+      sendError(res, 400, ['Bad mark or tag format.']);
    }
 }
 
@@ -112,8 +112,8 @@ export async function submitObservation(req, res) {
       seal = await getSealFromMark(body.marks[0].number, season);
       sealId = seal && seal.FirstObservation;
    } else {
-      sendError(res, 400, "Could not add seal to database. No marks or tags" +
-       " found")
+      sendError(res, 400, ["Could not add seal to database. No marks or tags" +
+       " found in observation"])
    }
 
    if (!seal) {
@@ -184,8 +184,8 @@ async function respondWithSealMatches(res, tagNums, markNums) {
       }
    }
    else {
-      sendError(res, 500,  "Could not find any marks or tags " +
-       "in the observation")
+      sendError(res, 400, ["Could not add seal to database. No marks or tags" +
+       " found in observation"])
     }
 }
 
@@ -213,8 +213,8 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
       sendData(res, response);
    }
    else {
-      sendError(res, 500,  "Could not find any marks or tags " +
-       "in the observation")
+      sendError(res, 400, ["Could not add seal to database. No marks or tags" +
+       " found in observation"])
     }
 }
 
@@ -224,18 +224,16 @@ async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
    for (let i = 0; i < completeTags.length; i++) {
       let tag = await getTag(completeTags[i]);
       if (tag && req.body.tags[i].isNew) {
-         console.log('tag already exists')
-         sendError(res, 400, 'Invalid observation. A tag that ' +
-          'is listed as new already exists in the database.');
+         sendError(res, 400, ['A tag that ' +
+          'is listed as new already exists in the database.']);
          return true;
       }
    }
    for (let i = 0; i < completeMarks.length; i++) {
       let mark = await getMark(completeMarks[i], completeMarks.season);
       if (mark && req.body.marks[i].isNew) {
-         console.log('mark already exists')
-         sendError(res, 400, 'Invalid observation. A mark ' +
-          'that is listed as new already exists in the database.');
+         sendError(res, 400, ['A mark ' +
+          'that is listed as new already exists in the database.']);
          return true;
       }
    }
