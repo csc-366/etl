@@ -19,8 +19,9 @@ export async function all(req, res) {
     }
 
     const pendingList = await getPendingObservations();
+    const formattedPendingList = pendingList.map(observation => mapObservation(observation));
 
-    sendData(res, pendingList)
+    sendData(res, formattedPendingList)
 }
 
 export async function pending(req, res) {
@@ -89,8 +90,102 @@ export async function singlePending(req, res) {
 
     const {id} = req.params;
     const observation = await getPendingObservation(id);
-    sendData(res, observation)
+    const formattedObservation = mapObservation(observation);
+    sendData(res, formattedObservation)
 }
+
+const mapObservation = (observation) => {
+    const formattedObservation = Object.entries(observation).reduce((agg, [key, value]) => {
+        switch(key) {
+            case 'Age':
+            case 'Comments':
+            case 'EnteredInAno':
+            case 'FirstSeenAsWeanling':
+            case 'Location':
+            case 'LastSeenAsPup':
+            case 'MoltPercentage':
+            case 'ObservationId':
+            case 'PupCount':
+            case 'Range':
+            case 'Season':
+            case 'Sex':
+            case 'Year':
+            case 'Date':
+                return {
+                    ...agg,
+                    [key]: value
+                };
+            case 'AnimalMass':
+            case 'AxillaryGirth':
+            case 'Mass':
+            case 'StandardLength':
+            case 'Tare':
+            case 'CurvilinearLength': {
+                const measurement = agg.measurement ? {...agg.measurement, [key]: value} : {[key]: value};
+                return {
+                    ...agg,
+                    measurement
+                }
+            }
+            case 'FieldLeaders':
+                return {
+                    ...agg,
+                    [key]: value ? value.split(',') : []
+                };
+            case 'Mark1': {
+                const marks = [{...agg.marks[0], number: value}, agg.marks[1]];
+                return {...agg, marks};
+            }
+            case 'NewMark1': {
+                const marks = [{...agg.marks[0], isNew: value}, agg.marks[1]];
+                return {...agg, marks};
+            }
+            case 'Mark1Position': {
+                const marks = [{...agg.marks[0], position: value}, agg.marks[1]];
+                return {...agg, marks};
+            }
+            case 'Mark2': {
+                const marks = [agg.marks[0],{...agg.marks[1], number: value}];
+                return {...agg, marks};
+            }
+            case 'NewMark2': {
+                const marks = [agg.marks[0], {...agg.marks[1], isNew: value}];
+                return {...agg, marks};
+            }
+            case 'Mark2Position': {
+                const marks = [agg.marks[0], {...agg.marks[1], position: value}];
+                return {...agg, marks};
+            }
+            case 'Tag1Number': {
+                const tags = [{...agg.tags[0], number: value}, agg.tags[1]];
+                return {...agg, tags};
+            }
+            case 'NewTag1': {
+                const tags = [{...agg.tags[0], isNew: value}, agg.tags[1]];
+                return {...agg, tags};
+            }
+            case 'Tag1Position': {
+                const tags = [{...agg.tags[0], position: value}, agg.tags[1]];
+                return {...agg, tags};
+            }
+            case 'NewTag2': {
+                const tags = [agg.tags[0], {...agg.tags[1], isNew: value}];
+                return {...agg, tags};
+            }
+            case 'Tag2Number': {
+                const tags = [agg.tags[0], {...agg.tags[1], number: value}];
+                return {...agg, tags};
+            }
+            case 'Tag2Position': {
+                const tags = [agg.tags[0], {...agg.tags[1], position: value}];
+                return {...agg, tags};
+            }
+            default:
+                return agg
+        }
+    }, {marks: [{},{}],tags: [{},{}]});
+    return formattedObservation;
+};
 
 export const validate = (method) => {
     switch (method) {
