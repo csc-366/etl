@@ -3,7 +3,7 @@ import {sendData, sendError} from "../utils/responseHelper";
 import {
    getPendingCount,
    getPendingObservations,
-   getPendingWithFilters,
+   getPendingWithFilters, getSinglePending,
    insertPending
 } from "../models/pendingObservations";
 
@@ -78,11 +78,16 @@ export async function submitPending(req, res) {
    upperCaseBody = parseMarks(upperCaseBody);
    upperCaseBody = parseTags(upperCaseBody);
    upperCaseBody = parseMeasurements(upperCaseBody);
-   console.log(upperCaseBody);
 
-   await insertPending(upperCaseBody);
+   const observationId = await insertPending(upperCaseBody);
 
-   sendData(res, ['Success']);
+   if (!observationId) {
+      sendError(res, 500, ["Could not insert pending Observation"])
+      return;
+   }
+
+   const pendingObservation = await getSinglePending(observationId);
+   sendData(res, pendingObservation);
 }
 
 function makeFirstLetterUpperCase(obj) {
@@ -153,7 +158,6 @@ function parseTags(upperCaseBody) {
       upperCaseBody = {...upperCaseBody, ...Tag1, ...Tag2};
    }
    delete upperCaseBody.Tags;
-   console.log(upperCaseBody)
    return upperCaseBody;
 }
 
@@ -175,5 +179,6 @@ function parseMeasurements(upperCaseBody) {
    }
    delete upperCaseBody.Measurement;
    upperCaseBody = {...upperCaseBody, ...Measurement};
+   console.log(upperCaseBody)
    return upperCaseBody;
 }

@@ -12,11 +12,22 @@ export async function getPendingCount() {
     " PendingObservations")))[0][0];
 }
 
+export async function getSinglePending(observationId) {
+   const pendingObservation = (await query(format("SELECT * FROM" +
+    " PendingObservations WHERE ObservationId = ?",[observationId])))[0];
+
+   if (!pendingObservation.length) {
+      return null;
+   }
+
+   return pendingObservation[0];
+}
+
 export async function insertPending(pendingObservation) {
    const queryString = "INSERT INTO PendingObservations SET ?";
+   const insertedPending = await query(format(queryString, pendingObservation));
 
-   const formatted = format(queryString, pendingObservation);
-   await query(formatted);
+   return insertedPending[0].insertId;
 }
 
 export async function getPendingWithFilters(filters) {
