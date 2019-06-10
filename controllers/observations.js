@@ -1,13 +1,12 @@
 import {sendData, sendError} from "../utils/responseHelper";
-import {body, param, validationResult} from 'express-validator/check';
+import {body, validationResult} from 'express-validator/check';
 import {
-   getPendingObservations,
-   getPartialIdentifiers,
    getCompleteIdentifiers,
+   getObservationsWithFilters,
+   getPartialIdentifiers,
    getSealObservations,
-   getPendingCount,
    insertObservation,
-   insertSealObservation, getObservationsWithFilters, getPendingWithFilters
+   insertSealObservation
 } from "../models/observations";
 import {
    addNewSeal,
@@ -18,35 +17,9 @@ import {
 } from "../models/seals";
 import {insertPupAge, insertPupCount} from "../models/pups";
 import {getMark, insertMarks} from "../models/marks";
-import {insertTags, getTag} from "../models/tags";
+import {getTag, insertTags} from "../models/tags";
 import {getObserver, insertObserver} from "../models/observers";
 import {insertMeasurement, selectMeasurement} from "../models/measurements";
-
-export async function getPending(req, res) {
-   const errors = validationResult(req);
-
-   if (!errors.isEmpty()) {
-      sendError(res, 400, errors.array());
-      return;
-   }
-
-   const pendingList = await getPendingObservations(req.query.count, req.query.page);
-
-   sendData(res, pendingList);
-}
-
-export async function pendingCount(req, res) {
-   const errors = validationResult(req);
-
-   if (!errors.isEmpty()) {
-      sendError(res, 400, errors.array());
-      return;
-   }
-
-   const pendingCount = await getPendingCount();
-
-   sendData(res, pendingCount);
-}
 
 export async function getFilteredObservations(req, res) {
    const location = req.query.location;
@@ -61,28 +34,6 @@ export async function getFilteredObservations(req, res) {
    sendData(res, observations)
 }
 
-
-export async function getFilteredPending(req, res) {
-   const location = req.query.location;
-   const startDate = req.query.startDate;
-   const endDate = req.query.endDate;
-   const fieldLeaders = req.query.fieldLeaders;
-   const sex = req.query.sex;
-   const pupCount = req.query.pupCount;
-   const lowerMoltLimit = req.query.lowerMoltLimit;
-   const upperMoltLimit = req.query.upperMoltLimit;
-
-   let ageClass = req.query.ageClass;
-   if (req.query.hasOwnProperty('pupAge')){
-      ageClass = req.query.pupAge;
-   }
-
-   const pending = await getPendingWithFilters({location,
-      startDate, endDate, fieldLeaders, ageClass, sex, pupCount,
-      lowerMoltLimit, upperMoltLimit});
-
-   sendData(res, pending)
-}
 
 export async function validateObservation(req, res) {
    const date = req.body.date && new Date(req.body.date);
@@ -145,10 +96,12 @@ export async function submitObservation(req, res) {
    if (body.tags && body.tags.length) {
       seal = await getSealFromTag(body.tags[0].number);
       sealId = seal && seal.FirstObservation;
-   } else if (body.marks && body.marks.length) {
+   }
+   else if (body.marks && body.marks.length) {
       seal = await getSealFromMark(body.marks[0].number, season);
       sealId = seal && seal.FirstObservation;
-   } else {
+   }
+   else {
       sendError(res, 400, ["Could not add seal to database. No marks or tags" +
        " found in observation"])
    }
@@ -178,6 +131,7 @@ export async function submitObservation(req, res) {
    sendData(res, observations);
 }
 
+
 export async function getMeasurements(req, res) {
    const measurements = await selectMeasurement(req.params.observationId);
 
@@ -186,7 +140,7 @@ export async function getMeasurements(req, res) {
    }
    else {
       sendData(res, {
-         ObservationId: observationId,
+         ObservationId: req.params.observationId,
          StandardLength: null,
          CurvilinearLength: null,
          AxillaryGirth: null,
@@ -208,13 +162,23 @@ export const validate = (method) => {
       case 'getFilteredPending':
          return [];
       case 'submitObservation':
-         //TODO: make sure it is a valid date
          return [
             body('date')
                .exists().withMessage("is required")
                .isLength({min: 1})
                .withMessage("must be at least 1 character long"),
          ];
+      case 'submitPending':
+         return [
+            body('date')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+            body('location')
+               .exists().withMessage("is required")
+               .isLength({min: 1})
+               .withMessage("must be at least 1 character long"),
+          ]
       case "getMeasurements":
          return [];
    }
@@ -300,3 +264,4 @@ async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
    }
    return false;
 }
+
