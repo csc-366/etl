@@ -11,6 +11,7 @@ import usersRouter from './routes/users';
 import etlRouter from './routes/etl';
 import observationRouter from './routes/observations';
 import formOptionsRouter from "./routes/formOptions";
+import exportRouter from './routes/export';
 
 process.title = "SeaQL-backend";
 
@@ -38,5 +39,6 @@ app.use('/users', usersRouter);
 app.use('/observations', observationRouter);
 app.use('/etl', etlRouter);
 app.use('/formOptions', formOptionsRouter);
+app.use('/export', exportRouter);
 
 module.exports = app;
