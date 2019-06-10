@@ -7,16 +7,31 @@ import {
     addUser,
     deactivateUser, setDBUserStatus
 } from '../models/users';
+import {getExistingAffiliations} from "../models/formOptions";
 
 export async function register(req, res) {
-    const errors = validationResult(req);
+   const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-        sendError(res, 400, errors.array());
-        return;
-    }
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
 
-    const user = await addUser(req.body);
+   if (req.body.affiliation) {
+      const existingAffiliations = await getExistingAffiliations();
+
+      const selectedAffiliation = existingAffiliations.filter((aff) => {
+         return aff.Affiliation === req.body.affiliation;
+      });
+
+      if (!selectedAffiliation.length) {
+         sendError(res, 400, `The affiliation '${req.body.affiliation}' does not exist`);
+      }
+   } else {
+      req.body.affiliation = "None";
+   }
+
+   const user = await addUser(req.body);
 
     if (user === null) {
         sendError(res, 400,

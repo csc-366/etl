@@ -1,6 +1,6 @@
 // This middleware assumes cookieParser has been "used" before this
 import {sendError} from "./responseHelper";
-import * as crypto from "crypto";
+import crypto from "crypto";
 
 const twoHours = 7200000;
 const tokenLength = 16;

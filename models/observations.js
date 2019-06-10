@@ -90,11 +90,7 @@ export async function isValidLocation(location) {
    const result = (await query(format("SELECT * FROM Location WHERE Beach = ?",
     [location])))[0];
 
-   if (result.length) {
-      return true;
-   } else {
-      return false;
-   }
+   return (result.length) ? true : false;
 }
 
 export async function getSealObservations(sealId) {
