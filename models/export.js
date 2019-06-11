@@ -15,16 +15,18 @@ export const exportCompleted = async (format='csv') => {
     const completedTags = groupBy((await query(completeTagsString))[0], 'ObservationId');
     const completedMarks = groupBy((await query(completeMarksString))[0], 'ObservationId');
     const fullObservations = completedObservations.map(observation => {
-        let tags = completedTags;
-        let marks = completedMarks;
+        let tags = completedTags[observation.ID];
+        let marks = completedMarks[observation.ID];
         if (format === 'csv') {
             tags = spreadTags(completedTags[observation.ID]);
             marks = spreadMarks(completedMarks[observation.ID]);
         }
         return {
             ...observation,
-            ...marks[observation.ID],
-            ...tags[observation.ID]
+            Date: observation.Date ? new Date(observation.Date).toDateString() : null,
+            FirstSeenAsWeanling: observation.FirstSeenAsWeanling ? new Date(observation.FirstSeenAsWeanling).toDateString() : null,
+            ...marks,
+            ...tags
         }
     });
     return format === 'csv' ? stringify(fullObservations, options) : fullObservations;

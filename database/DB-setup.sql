@@ -76,17 +76,6 @@ CREATE TABLE User (
   PRIMARY KEY (Username),
   FOREIGN KEY (Affiliation) REFERENCES Affiliation(Affiliation)
 );
-INSERT INTO User(Username, PasswordHash, PasswordSalt, FirstName, LastName, Email, Affiliation, Role, Status) VALUES (
-  "maxwellray",
-  "$2b$10$.12D9.M1d3fyFRjIipB4H.e/oYTeoBUEeWU9P/bwBACSkKb3qbcuC",
-  null,
-  "Maxwell",
-  "Ray",
-  "me@maxray.me",
-  null,
-  "Admin",
-  "Pending"
-)
 
 CREATE TABLE Observer (
   Email       VARCHAR(48),
