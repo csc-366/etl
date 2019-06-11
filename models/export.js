@@ -7,7 +7,14 @@ const options = {
 
 export const exportPending = async (format='csv') => {
     const pendingObservations = (await query("SELECT * FROM PendingObservations"))[0];
-    return format === 'csv' ? stringify(pendingObservations, options) : pendingObservations;
+    const fullObservations = pendingObservations.map(observation => {
+        return {
+            ...observation,
+            Date: observation.Date ? new Date(observation.Date).toDateString() : null,
+            FirstSeenAsWeanling: observation.FirstSeenAsWeanling ? new Date(observation.FirstSeenAsWeanling).toDateString() : null
+        }
+    });
+    return format === 'csv' ? stringify(fullObservations, options) : fullObservations;
 };
 
 export const exportCompleted = async (format='csv') => {
@@ -21,6 +28,7 @@ export const exportCompleted = async (format='csv') => {
             tags = spreadTags(completedTags[observation.ID]);
             marks = spreadMarks(completedMarks[observation.ID]);
         }
+        console.log(observation);
         return {
             ...observation,
             Date: observation.Date ? new Date(observation.Date).toDateString() : null,
