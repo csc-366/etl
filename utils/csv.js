@@ -91,7 +91,7 @@ export async function parse(filename) {
         }
 
         try {
-            season = row['Season'] ? row['Season'].trim() : null;
+            season = row['Season'] ? row['Season'].trim() : dateToSeason(new Date(date));
         } catch (e) {
             errors[row.rowNumber] = {...errors[row.rowNumber], "season": e.message}
         }
@@ -276,6 +276,13 @@ const parseMeasurement = (row) => {
         massTare: row['Tare'],
         animalMass: row['Mass-Tare']
     }
+};
+
+const dateToSeason = (date) => {
+    if (date.getMonth() === 12) {
+        return date.getFullYear() + 1
+    }
+    return date.getFullYear();
 };
 
 const twoDigits = (d) => {
