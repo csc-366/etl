@@ -24,7 +24,7 @@ export async function login(req, res) {
       res.location(`sessions/${cookie}`);
       sendData(res, user);
    } else {
-      sendError(res, 400, "Invalid login")
+      sendError(res, 400, ["Invalid login"])
    }
 }
 
@@ -40,7 +40,7 @@ export async function getSessions(req,res) {
       sendData(res, sessions);
    }
    else {
-      sendError(res, 403, "Forbidden");
+      sendError(res, 403, ["Must be admin"]);
    }
 }
 
@@ -56,10 +56,10 @@ export async function logout(req,res) {
    let logoutSsn = sessions[req.cookies.SeaQLAuth];
 
    if (logoutSsn && (logoutSsn.username === reqSsn.username)) {
-      sendData(res, "Logout successful.");
+      sendData(res, ["Logout successful."]);
    }
    else {
-      sendError(res, 400, "Logout failure.")
+      sendError(res, 400, ["Logout failure."])
    }
 }
 
