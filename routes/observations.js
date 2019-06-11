@@ -1,15 +1,15 @@
 import Router from 'express';
 import {
-   submitObservation,
-   validateObservation,
-   validate,
-   getMeasurements,
-   getFilteredObservations} from "../controllers/observations";
+    submitObservation,
+    validateObservation,
+    validate,
+    getMeasurements,
+    getFilteredObservations, singlePending, count, pending, all
+} from "../controllers/observations";
 import {
-   getFilteredPending, getPending, pendingCount,
-   submitPending
+    getFilteredPending, getPending, pendingCount,
+    submitPending
 } from "../controllers/pendingObservations";
-import {singlePending, count, validate, pending, validateObservation, all} from '../controllers/observations'
 
 const observationsRouter = Router();
 

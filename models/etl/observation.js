@@ -66,7 +66,7 @@ export const ingestSeal = async ({sex, procedure = null, marks, tags, year, conn
             if(name === null) {
                 console.log('Null Name')
             }
-            await query(connection,"INSERT INTO Seal (FirstObservation, Sex, Name, `Procedure`) VALUES (?,?,?,?)", [observationId, sex, name, procedure]);
+            await query(connection,"INSERT INTO Seal (FirstObservation, Sex, `Name`, `Procedure`) VALUES (?,?,?,?)", [observationId, sex, name, procedure]);
             return (await query(connection, "SELECT LAST_INSERT_ID() as id"))[0].id;
         }
     }
