@@ -30,7 +30,17 @@ observationsRouter.get('/pending/:id', validate('singlePending'), singlePending)
 observationsRouter.get('/count', validate('count'), count);
 observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
+
 observationsRouter.post('/', validate('submitObservation'), submitObservation);
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
+
+// pending observations
+observationsRouter.get('/all', validate('all'), all);
+observationsRouter.get('/count', validate('count'), count);
+observationsRouter.get('/pending', validate('pending'), pending);
+observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
+observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
+
+observationsRouter.post('/pending', validate('pending'), submitPending);
 
 export default observationsRouter;
