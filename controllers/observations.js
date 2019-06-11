@@ -193,20 +193,20 @@ async function respondWithSealMatches(res, tagNums, markNums) {
       seal = await getSealFromTag(tagNums[0]);
       if (seal) {
          sealObservations = await getSealObservations(seal.SealId);
-         sendData(res, {seal, sealObservations});
+         sendData(res, {status: "OK", seal, sealObservations});
       }
       else {
-         sendData(res, "No seals with this tag number found.");
+         sendData(res, []);
       }
    }
    else if (markNums.length) {
       seal = await getSealFromMark(markNums[0], markNums.season);
       if (seal) {
          sealObservations = await getSealObservations(seal.SealId);
-         sendData(res, {seal, sealObservations});
+         sendData(res, {status: "OK", seal, sealObservations});
       }
       else {
-         sendData(res, "No seals with this mark found.");
+         sendData(res, []);
       }
    }
    else {
@@ -227,7 +227,7 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
          observations = await getSealObservations(potentialSeals[i].SealId);
          response.push({seal: potentialSeals[i], sealObservations: observations});
       }
-      sendData(res, response);
+      sendData(res, {status: "WARNING", response});
    }
    else if (markNums.length) {
       potentialSeals = await getSealsFromPartialMark(markNums[0], markNums.season);
@@ -236,7 +236,7 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
          observations = await getSealObservations(potentialSeals[i].SealId);
          response.push({seal: potentialSeals[i], sealObservations: observations});
       }
-      sendData(res, response);
+      sendData(res, {status: "WARNING", response});
    }
    else {
       sendError(res, 400, ["Could not add seal to database. No marks or tags" +
