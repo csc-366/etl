@@ -9,7 +9,7 @@ import {
    getFilteredPending, getPending, pendingCount,
    submitPending
 } from "../controllers/pendingObservations";
-import {singlePending, count, validate, pending, validateObservation, all} from '../controllers/observations'
+import {singlePending, count, pending, all} from '../controllers/observations'
 
 const observationsRouter = Router();
 
@@ -30,6 +30,7 @@ observationsRouter.get('/pending/:id', validate('singlePending'), singlePending)
 observationsRouter.get('/count', validate('count'), count);
 observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
+observationsRouter.post('/pending', validate('pending'), submitPending);
 observationsRouter.post('/', validate('submitObservation'), submitObservation);
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
 

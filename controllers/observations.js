@@ -1,8 +1,9 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {body, validationResult} from 'express-validator/check';
 import {
-    getPendingObservations, getPartialIdentifiers, getCompleteIdentifiers,
-    getSealObservations, getPendingObservationsCount, getPendingObservation
+   getPendingObservations,
+   getPendingObservationsCount,
+   getPendingObservation,
    getCompleteIdentifiers,
    getObservationsWithFilters,
    getPartialIdentifiers,
@@ -11,9 +12,6 @@ import {
    insertSealObservation
 } from "../models/observations";
 import {
-    getSealFromMark,
-    getSealFromTag, getSealsFromPartialMark,
-    getSealsFromPartialTag,
    addNewSeal,
    getSealFromMark,
    getSealFromTag,
