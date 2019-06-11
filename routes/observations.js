@@ -6,10 +6,13 @@ import {
    getMeasurements,
    getFilteredObservations} from "../controllers/observations";
 import {
-   getFilteredPending, getPending, pendingCount,
+   all,
+   getFilteredPending,
+   pending,
+   singlePending,
    submitPending
 } from "../controllers/pendingObservations";
-import {singlePending, count, pending, all} from '../controllers/observations'
+import {count} from '../controllers/pendingObservations'
 
 const observationsRouter = Router();
 
@@ -23,15 +26,20 @@ const observationsRouter = Router();
  *        clumped together in a filtration utility.
 */
 
-observationsRouter.get('/all', validate('all'), all);
-observationsRouter.get('/pending', validate('pending'), pending);
-observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
-observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
-observationsRouter.get('/count', validate('count'), count);
+// complete observations
 observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
-observationsRouter.post('/pending', validate('pending'), submitPending);
+
 observationsRouter.post('/', validate('submitObservation'), submitObservation);
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
+
+// pending observations
+observationsRouter.get('/all', validate('all'), all);
+observationsRouter.get('/count', validate('count'), count);
+observationsRouter.get('/pending', validate('pending'), pending);
+observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
+observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
+
+observationsRouter.post('/pending', validate('pending'), submitPending);
 
 export default observationsRouter;
