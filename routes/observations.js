@@ -9,6 +9,7 @@ import {
    getFilteredPending, getPending, pendingCount,
    submitPending
 } from "../controllers/pendingObservations";
+import {singlePending, count, validate, pending, validateObservation, all} from '../controllers/observations'
 
 const observationsRouter = Router();
 
@@ -22,18 +23,14 @@ const observationsRouter = Router();
  *        clumped together in a filtration utility.
 */
 
-// pending observations
-observationsRouter.get('/pending', validate('getPending'), getPending);
-observationsRouter.get('/count', validate('pendingCount'), pendingCount);
+observationsRouter.get('/all', validate('all'), all);
+observationsRouter.get('/pending', validate('pending'), pending);
 observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
-observationsRouter.post('/pending', validate('submitPending'), submitPending);
-
-// complete observations
+observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
+observationsRouter.get('/count', validate('count'), count);
 observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
 observationsRouter.post('/', validate('submitObservation'), submitObservation);
-
-// validation
 observationsRouter.post('/validateObservation', validate('validateObservation'), validateObservation);
 
 export default observationsRouter;
