@@ -22,6 +22,10 @@ export const getPendingObservationsCount = async () => {
    let pendingCount = await query("SELECT COUNT(*) as count from PendingObservations");
    return pendingCount[0][0];
 };
+import {format, query} from './db2';
+import {getCompleteMark, getPartialMarks, hasNoInvalidMarks} from "./marks";
+import {getCompleteTags, getPartialTags, hasNoInvalidTags} from "./tags";
+import {appendQueryConditions} from "../utils/filtration";
 
 export async function getCompleteIdentifiers(observation) {
    const tags = observation.tags;
@@ -95,10 +99,43 @@ export async function isValidLocation(location) {
 
 export async function getSealObservations(sealId) {
    const queryString =
-    "SELECT * From Observation O " +
+    "SELECT O.* From Observation O " +
       "JOIN SealObservation SO on SO.ObservationID = O.ID " +
       "JOIN Seal S on S.FirstObservation = SO.SealID " +
       "WHERE S.FirstObservation = ?";
 
    return (await query(format(queryString, [sealId])))[0];
 }
+
+export async function insertObservation(obs, submitterName) {
+   // optional fields must be set to null in case they are undefined
+   const observer = obs.observer ? obs.observer : null;
+   const ageClass = obs.ageClass ? obs.ageClass : null;
+   const moltPercentage = obs.moltPercentage ? obs.moltPercentage : null;
+   const comments = obs.comments ? obs.comments : null;
+
+   const queryString =
+    "INSERT INTO Observation (Date, Location, SubmittedBy, Observer, AgeClass, " +
+    "MoltPercentage, Comments) VALUES (?,?,?,?,?,?,?)";
+
+   const result = await query(format(queryString, [obs.date, obs.location, submitterName,
+      observer, ageClass, moltPercentage, comments]));
+
+   return result[0].insertId;
+}
+
+export async function insertSealObservation(observationId, sealId) {
+   const queryString = "INSERT INTO SealObservation " +
+    "(ObservationId, SealId) VALUES (?,?)";
+
+   await query(format(queryString, [observationId, sealId]));
+}
+
+export async function getObservationsWithFilters(filters) {
+   let queryString = "SELECT * FROM Observation ";
+
+   let updatedQuery = appendQueryConditions('observations', queryString, filters);
+
+   return (await query(updatedQuery))[0];
+}
+

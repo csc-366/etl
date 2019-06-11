@@ -1,5 +1,16 @@
 import {query, checkQuery, format} from './db2';
 
+export async function addNewSeal(observationId, observation) {
+   const sex = (observation.sex === 'M' || observation.sex === 'F') ?
+    observation.sex : null;
+   const procedure = observation.procedure ? observation.procedure : null;
+
+   const queryString = "INSERT INTO Seal (FirstObservation, Sex, `Procedure`)" +
+    " VALUES (?,?,?)";
+
+   await query(format(queryString, [observationId, sex, procedure]));
+}
+
 export async function getSealFromTag(tagNumber) {
    const queryString =
     "SELECT * FROM Seal S " +

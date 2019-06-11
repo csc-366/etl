@@ -7,13 +7,18 @@ import {
    addNewLocation,
    addNewRookery,
    addNewTagPosition,
-   delColor, delLocation,
    getExistingTagPositions,
    getExistingAffiliations,
    getExistingAgeClasses,
    getExistingColors,
    getExistingLocations,
-   getExistingRookeries, delRookery, delAffiliation, delAgeClass, delTagPosition
+   getExistingRookeries,
+   delRookery,
+   delAffiliation,
+   delAgeClass,
+   delTagPosition,
+   delColor,
+   delLocation
 } from "../models/formOptions";
 
 export async function getFormOptions(req, res) {
@@ -43,12 +48,12 @@ export async function addColor(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
    if (req.body.colorName && req.body.colorName.length > 10) {
-      sendError(res, 400, "colorName is too long");
+      sendError(res, 400, ["colorName is too long"]);
    }
 
    let result = await addNewColor(req.body.color, req.body.colorName);
@@ -66,7 +71,7 @@ export async function deleteColor(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -86,7 +91,7 @@ export async function addLocation(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -105,7 +110,7 @@ export async function deleteLocation(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -125,7 +130,7 @@ export async function addTagPosition(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -145,7 +150,7 @@ export async function deleteTagPosition(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -165,7 +170,7 @@ export async function addAgeClass(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -184,7 +189,7 @@ export async function deleteAgeClass(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -204,7 +209,7 @@ export async function addRookery(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -223,7 +228,7 @@ export async function deleteRookery(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -243,7 +248,7 @@ export async function addAffiliation(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
@@ -262,7 +267,7 @@ export async function deleteAffiliation(req, res) {
    }
 
    if (!req.session.isAdmin()) {
-      sendError(res, 403, "Must be admin");
+      sendError(res, 403, ["Must be admin"]);
       return;
    }
 
