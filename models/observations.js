@@ -1,6 +1,7 @@
 import { query, format, startTransaction, rollback} from './db2';
-import { getCompleteMark, hasNoInvalidMarks, getPartialMarks } from "./markValidation";
-import { getCompleteTags, hasNoInvalidTags, getPartialTags } from "./tagValidation";
+import {getCompleteMark, getPartialMarks, hasNoInvalidMarks} from "./marks";
+import {getCompleteTags, getPartialTags, hasNoInvalidTags} from "./tags";
+import {appendQueryConditions} from "../utils/filtration";
 
 export async function getPendingObservations(count=-1, page=-1) {
    let pendingList;
@@ -22,10 +23,6 @@ export const getPendingObservationsCount = async () => {
    let pendingCount = await query("SELECT COUNT(*) as count from PendingObservations");
    return pendingCount[0][0];
 };
-import {format, query} from './db2';
-import {getCompleteMark, getPartialMarks, hasNoInvalidMarks} from "./marks";
-import {getCompleteTags, getPartialTags, hasNoInvalidTags} from "./tags";
-import {appendQueryConditions} from "../utils/filtration";
 
 export async function getCompleteIdentifiers(observation) {
    const tags = observation.tags;

@@ -1,100 +1,161 @@
 import {query} from "./db2";
-import {getPendingObservation} from "./observations";
+import stringify from 'csv-stringify';
+const options = {
+    delimiter: ',',
+    header: true
+};
 
-export const exportPendingCSV = async () => {
+export const exportPending = async (format='csv') => {
     const pendingObservations = (await query("SELECT * FROM PendingObservations"))[0];
-    const pendingObservationsHeaders = Object.keys(pendingObservations[0]);
-    const headerString = `${pendingObservationsHeaders.join(',')}\n`;
-    return pendingObservations.reduce((agg, observation) => {
-        const observationValues = Object.values(observation).map(o => {
-            if (typeof o === 'string') {
-                return `'${o}'`
-            }
-            return o;
-        }).join(',');
-        return `${agg}${observationValues}\n`;
-    }, headerString);
+    return format === 'csv' ? stringify(pendingObservations, options) : pendingObservations;
 };
 
-const getCompletedMarks = async () => {
-    const completedMarks = groupBy((await query(completeMarksString))[0], 'ObservationId');
-    const mappedMarks = Object.entries(completedMarks).reduce((agg, [observation, marks]) => {
-        const markValues = [];
-        if (marks.length > 0) {
-            const newMark = marks[0].NewMark ? !!marks[0].NewMark : '';
-            const markNumber = marks[0].Number ? marks[0].Number : '';
-            const markPosition = marks[0].Position ? marks[0].Position : '';
-            markValues.push(newMark, markNumber, markPosition)
-        } else {
-            markValues.push('', '', '');
-        }
-        if (marks.length > 1) {
-            const newMark = marks[1].NewMark ? !!marks[1].NewMark : '';
-            const markNumber = marks[1].Number ? marks[1].Number : '';
-            const markPosition = marks[1].Position ? marks[1].Position : '';
-            markValues.push(newMark, markNumber, markPosition)
-        } else {
-            markValues.push('', '', '');
-        }
-        return {
-            ...agg,
-            [observation]: markValues.join(',')
-        }
-    }, {});
-    return mappedMarks;
-};
-
-const getCompletedTags = async () => {
-    const completedTags = groupBy((await query(completeTagsString))[0], 'ObservationId');
-    const mappedTags = Object.entries(completedTags).reduce((agg, [observation, tags]) => {
-        const tagValues = [];
-        if (tags.length > 0) {
-            const newTag = tags[0].NewTag ? !!tags[0].NewTag : '';
-            const tagNumber = tags[0].Number ? tags[0].Number : '';
-            const tagPosition = tags[0].Position ? tags[0].Position : '';
-            tagValues.push(newTag, tagNumber, tagPosition)
-        } else {
-            tagValues.push('', '', '');
-        }
-        if (tags.length > 1) {
-            const newTag = tags[1].NewTag ? !!tags[1].NewTag : '';
-            const tagNumber = tags[1].Number ? tags[1].Number : '';
-            const tagPosition = tags[1].Position ? tags[1].Position : '';
-            tagValues.push(newTag, tagNumber, tagPosition)
-        } else {
-            tagValues.push('', '', '');
-        }
-        return {
-            ...agg,
-            [observation]: tagValues.join(',')
-        }
-    }, {});
-    return mappedTags;
-};
-
-export const exportCompletedCSV = async () => {
+export const exportCompleted = async (format='csv') => {
     const completedObservations = (await query(completeQueryString))[0];
-    const completedMarks = await getCompletedMarks();
-    const completedTags = await getCompletedTags();
-    const completedObservationsHeaders = Object.keys(completedObservations[0]);
-    const headerString = `${completedObservationsHeaders.join(',')},NewTag1,Tag1Number,Tag1Position,NewTag2,Tag2Number,Tag2Position,NewMark1,Mark1,Mark1Position,NewMark2,Mark2,Mark2Position\n`;
-    const observations = completedObservations.map(observation => {
-        const quotedObservation = Object.entries(observation).map(([key, value]) => {
-            if (value === undefined || value === 'undefined') {
-                console.log('Undefined', typeof value);
-            }
-            if (!value) {
-                return ''
-            }
-            if (typeof value === 'string') {
-                return `'${value}'`
-            } else {
-                return value
-            }
-        }).join(',');
-        return quotedObservation + completedTags[observation.ID] + completedMarks[observation.ID];
-    }).join('\n');
-    return headerString + observations
+    const completedTags = groupBy((await query(completeTagsString))[0], 'ObservationId');
+    const completedMarks = groupBy((await query(completeMarksString))[0], 'ObservationId');
+    const fullObservations = completedObservations.map(observation => {
+        let tags = completedTags;
+        let marks = completedMarks;
+        if (format === 'csv') {
+            tags = spreadTags(completedTags[observation.ID]);
+            marks = spreadMarks(completedMarks[observation.ID]);
+        }
+        return {
+            ...observation,
+            ...marks[observation.ID],
+            ...tags[observation.ID]
+        }
+    });
+    return format === 'csv' ? stringify(fullObservations, options) : fullObservations;
+};
+
+const spreadMarks = (values) => {
+    if (!values) {
+        return {
+            NewMark1: null,
+            Mark1Number: null,
+            Mark1Position: null,
+            NewMark2: null,
+            Mark2Number: null,
+            Mark2Position: null
+        }
+    } else if(values.length === 1) {
+        let newMark1;
+        switch(values[0].NewMark) {
+            case 1:
+                newMark1 = 'Yes';
+                break;
+            case 0:
+                newMark1 = 'No';
+                break;
+            default:
+                newMark1 = null;
+        }
+        return {
+            NewMark1: newMark1,
+            Mark1Number: values[0].Number,
+            Mark1Position: values[0].Position,
+            NewMark2: null,
+            Mark2Number: null,
+            Mark2Position: null
+        }
+    } else {
+        let newMark1;
+        switch(values[0].NewMark) {
+            case 1:
+                newMark1 = 'Yes';
+                break;
+            case 0:
+                newMark1 = 'No';
+                break;
+            default:
+                newMark1 = null;
+        }
+        let newMark2;
+        switch(values[1].NewMark) {
+            case 1:
+                newMark2 = 'Yes';
+                break;
+            case 0:
+                newMark2 = 'No';
+                break;
+            default:
+                newMark2 = null;
+        }
+        return {
+            NewMark1: newMark1,
+            Mark1Number: values[0].Number,
+            Mark1Position: values[0].Position,
+            NewMark2: newMark2,
+            Mark2Number: values[1].Number,
+            Mark2Position: values[1].Position
+        }
+    }
+};
+
+const spreadTags = (values) => {
+    if (!values) {
+        return {
+            NewTag1: null,
+            Tag1Number: null,
+            Tag1Position: null,
+            NewTag2: null,
+            Tag2Number: null,
+            Tag2Position: null
+        }
+    } else if(values.length === 1) {
+        let newTag1;
+        switch(values[0].NewTag) {
+            case 1:
+                newTag1 = 'Yes';
+                break;
+            case 0:
+                newTag1 = 'No';
+                break;
+            default:
+                newTag1 = null;
+        }
+        return {
+            NewTag1: newTag1,
+            Tag1Number: values[0].Number,
+            Tag1Position: values[0].Position,
+            NewTag2: null,
+            Tag2Number: null,
+            Tag2Position: null
+        }
+    } else {
+        let newTag1;
+        switch(values[0].NewTag) {
+            case 1:
+                newTag1 = 'Yes';
+                break;
+            case 0:
+                newTag1 = 'No';
+                break;
+            default:
+                newTag1 = null;
+        }
+        let newTag2;
+        switch(values[1].NewTag) {
+            case 1:
+                newTag2 = 'Yes';
+                break;
+            case 0:
+                newTag2 = 'No';
+                break;
+            default:
+                newTag2 = null;
+        }
+        return {
+            NewTag1: newTag1,
+            Tag1Number: values[0].Number,
+            Tag1Position: values[0].Position,
+            NewTag2: newTag2,
+            Tag2Number: values[1].Number,
+            Tag2Position: values[1].Position
+        }
+    }
 };
 
 const groupBy = function (xs, key) {
