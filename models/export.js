@@ -40,7 +40,7 @@ export const exportCompleted = async (format='csv') => {
     return format === 'csv' ? stringify(fullObservations, options) : fullObservations;
 };
 
-const spreadMarks = (values) => {
+export const spreadMarks = (values) => {
     if (!values) {
         return {
             NewMark1: null,
@@ -104,7 +104,7 @@ const spreadMarks = (values) => {
     }
 };
 
-const spreadTags = (values) => {
+export const spreadTags = (values) => {
     if (!values) {
         return {
             NewTag1: null,
@@ -168,14 +168,16 @@ const spreadTags = (values) => {
     }
 };
 
-const groupBy = function (xs, key) {
+export const groupBy = function (xs, key) {
     return xs.reduce(function (rv, x) {
         (rv[x[key]] = rv[x[key]] || []).push(x);
         return rv;
     }, {});
 };
 
-const completeQueryString = "SELECT o.ID,\n" +
+
+
+export const completeQueryString = "SELECT o.ID,\n" +
     "       f.Leaders,\n" +
     "       o.Year,\n" +
     "       o.Date,\n" +
@@ -217,11 +219,13 @@ const completeQueryString = "SELECT o.ID,\n" +
     "                    AND o.AgeClass = 'W'\n" +
     "                  GROUP BY s.FirstObservation) fsaw ON fsaw.FirstObservation = so.SealId";
 
-const completeTagsString = "SELECT TagObservations.ObservationId, TagObservations.NewTag, CONCAT(Tag.Color, Tag.Number) as Number, Tag.Position\n" +
+export const completeTagsString = "SELECT TagObservations.ObservationId," +
+ " TagObservations.NewTag, CONCAT(Tag.Color, Tag.Number) as Number, Tag.Position\n" +
     "FROM ((SELECT ObservationId, TagNumber, TRUE as NewTag FROM TagDeployment)\n" +
     "      UNION DISTINCT (SELECT *, FALSE AS NewTag FROM TagObservation)) TagObservations\n" +
     "       LEFT JOIN Tag ON TagObservations.TagNumber = Tag.Number";
-const completeMarksString = "SELECT MarkObservations.ObservationId, MarkObservations.NewMark, Mark.Number, Mark.Position\n" +
+export const completeMarksString = "SELECT MarkObservations.ObservationId," +
+ " MarkObservations.NewMark, Mark.Number, Mark.Position\n" +
     "FROM ((SELECT ObservationId, MarkId, TRUE as NewMark FROM MarkDeployment)\n" +
     "      UNION DISTINCT (SELECT *, FALSE as NewMark FROM MarkObservation)) MarkObservations\n" +
     "       LEFT JOIN Mark ON MarkObservations.MarkId = Mark.ID";
