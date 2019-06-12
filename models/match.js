@@ -1,5 +1,15 @@
 import {format, query} from "./db2";
 
+export const match = async (observation) => {
+    const {sex, tags, marks} = observation;
+    const sexScores = await matchSex(sex);
+    const tagScores = await matchTags(tags);
+    const markScores = await matchMarks(marks);
+
+    const totalScores = Object.entries(sexScores) + Object.entries(tagScores)  + Object.entries(markScores);
+    return aggregateScoreLists(totalScores);
+};
+
 export const matchSex = async (sex) => {
     if (!sex) {
         return {}
@@ -17,23 +27,57 @@ export const matchSex = async (sex) => {
 };
 
 export const matchMarks = async (marks) => {
-    const markNumberMatches = {};
-    const markPositionMatches = {};
+    if (!marks) {
+        return;
+    }
 
-    return Object.entries(markNumberMatches).reduce((agg, [sealId, score]) => {
-        return {
-            ...agg,
-            [sealId]: score + (markPositionMatches[sealId] ? markPositionMatches[sealId] : 0)
-        }
-    }, {})
+    const scoreLists = [];
+
+    for (let i = 0; i < marks.length; i++) {
+        const markNumberMatches = matchMarkNumber(marks[i].number);
+        const markPositionMatches = matchMarkPosition(marks[i].position);
+
+        const markScoreEntries = Object.entries(markNumberMatches) + Object.entries(markPositionMatches);
+
+        const markScores = markScoreEntries.reduce((agg, [sealId, score]) => {
+           const updatedScore = (agg[sealId]) ? agg[sealId] + score : score;
+           return {
+               ...agg,
+               [sealId]: updatedScore
+           }
+        }, {});
+
+        scoreLists.push(markScores);
+    }
+
+    return aggregateScoreLists(scoreLists)
 };
 
-const matchMarkNumbers = async (markNumbers) => {
+const matchMarkNumber = async (markNumber) => {
+    if (!markNumber) {
+        return {};
+    }
+
+    let score = (markNumber.includes('_')) ? 4 : 8;
+
+    return (await query(format("SELECT s.FirstObservation from Mark m " +
+       "LEFT JOIN MarkDeployment md on m.ID = = md.MarkId " +
+       "LEFT JOIN Seal s on md.MarkId =  s.FirstObservation " +
+       "WHERE m.Number LIKE ?", [markNumber])))[0]
+       .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: score}), {});
 
 };
 
-const matchMarkPosition = async (markPositions) => {
+const matchMarkPosition = async (markPosition) => {
+    if (!markPosition) {
+        return {};
+    }
 
+    return (await query(format("SELECT s.FirstObservation from Mark m " +
+        "LEFT JOIN MarkDeployment md on m.ID = = md.MarkId " +
+        "LEFT JOIN Seal s on md.MarkId =  s.FirstObservation " +
+        "WHERE Position = ?", [markPosition])))[0]
+        .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: 2}), {});
 };
 
 export const matchTags = async (tags) => {
