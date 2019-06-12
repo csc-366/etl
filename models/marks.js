@@ -25,35 +25,60 @@ export async function insertMarkObservation(observationId, markId) {
    const queryString = "INSERT INTO MarkObservation (ObservationId, MarkId)" +
     " VALUES (?,?)";
 
-   await query(format(queryString, [observationId, markId]));
+   try {
+      await query(format(queryString, [observationId, markId]));
+   }
+   catch (e) {
+      throw e
+   }
 }
 
 export async function insertMarkDeployment(observationId, markId, sealId) {
    const queryString = "INSERT INTO MarkDeployment " +
     "(ObservationId, MarkId, SealId) VALUES (?,?,?)";
-
-   await query(format(queryString, [observationId, markId, sealId]));
+   try {
+      await query(format(queryString, [observationId, markId, sealId]));
+   }
+   catch (e) {
+     throw e;
+   }
 }
 
 export async function insertMarks(observationId, marks, season, sealId) {
    const existingMarks = marks.filter(mark => !mark.isNew);
    const newMarks = marks.filter(mark => mark.isNew);
 
-   await insertExistingMarks(observationId, existingMarks, season);
-   await insertNewMarks(observationId, newMarks, season, sealId);
+   try {
+      await insertExistingMarks(observationId, existingMarks, season);
+      await insertNewMarks(observationId, newMarks, season, sealId);
+   }
+   catch (e) {
+      throw e;
+   }
+
 }
 
 async function insertExistingMarks(observationId, existingMarks, season) {
    for (let i = 0; i < existingMarks.length; i++) {
       let mark = await getMark(existingMarks[i].number, season);
-      await insertMarkObservation(observationId, mark.ID);
+      if (mark) {
+         await insertMarkObservation(observationId, mark.ID);
+      }
+      else {
+         throw new Error("Could not find existing mark");
+      }
    }
 }
 
 async function insertNewMarks(observationId, newMarks, season, sealId) {
-   for (let i = 0; i < newMarks.length; i++) {
-      let markId = await createNewMark(newMarks[i].number, season, newMarks[i].position);
-      await insertMarkDeployment(observationId, markId, sealId);
+   try {
+      for (let i = 0; i < newMarks.length; i++) {
+         let markId = await createNewMark(newMarks[i].number, season, newMarks[i].position);
+         await insertMarkDeployment(observationId, markId, sealId);
+      }
+   }
+   catch (e) {
+      throw new Error("Mark already exists in database")
    }
 }
 
