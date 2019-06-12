@@ -32,12 +32,39 @@ export const matchMarks = async (marks) => {
     }, {})
 };
 
-const matchMarkNumbers = async (markNumbers) => {
+const matchMarkNumber = async (markNumber) => {
+    if (!markNumber) {
+        return {};
+    }
+
+    if (markNumber.contains('_')) {
+        return (await query(format("SELECT s.FirstObservation from Mark m " +
+        "LEFT JOIN MarkDeployment md on m.ID = = md.MarkId " +
+        "LEFT JOIN Seal s on md.MarkId =  s.FirstObservation " +
+        "WHERE m.Number LIKE ?", [markNumber])))[0]
+        .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: 8}), {});
+    }
+
+    else {
+       return (await query(format("SELECT s.FirstObservation from Mark m " +
+        "LEFT JOIN MarkDeployment md on m.ID = = md.MarkId " +
+        "LEFT JOIN Seal s on md.MarkId =  s.FirstObservation " +
+        "WHERE m.Number = ?", [markNumber])))[0]
+        .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: 8}), {});
+    }
 
 };
 
-const matchMarkPosition = async (markPositions) => {
+const matchMarkPosition = async (markPosition) => {
+    if (!markPosition) {
+        return {};
+    }
 
+    const dbResult = (await query(format("SELECT s.FirstObservation from Mark m " +
+     "LEFT JOIN MarkDeployment md on m.ID = = md.MarkId " +
+     "LEFT JOIN Seal s on md.MarkId =  s.FirstObservation " +
+     "WHERE Position = ?", [markPosition])))[0]
+     .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: 2}), {});
 };
 
 export const matchTags = async (tags) => {
