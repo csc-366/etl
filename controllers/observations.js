@@ -82,15 +82,22 @@ export async function count(req, res) {
 export async function validateObservation(req, res) {
     const errors = validationResult(req);
 
+    console.log(req.body);
+
     if (!errors.isEmpty()) {
         sendError(res, 400, errors.array());
         return;
     }
 
-    const date = req.body.date && new Date(req.body.date);
+    if (!req.body.data || !req.body.data.date) {
+        sendError(res, 400, "missing values");
+        return;
+    }
+
+    const date = req.body.data.date && new Date(req.body.data.date);
     const season = date && date.getFullYear();
 
-    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
+    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body.data);
     completeMarks.season = season;
 
     if (completeTags.length || completeMarks.length) {
@@ -107,20 +114,20 @@ export async function validateObservation(req, res) {
     }
 
    // check for partially valid observation
-   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
+   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body.data);
    partialMarks.season = season;
 
     if (partialTags.length || partialMarks.length) {
         await respondWithPotentialMatches(res, partialTags, partialMarks);
-    }
-    else {
+    } else {
         sendError(res, 400, 'Invalid observation');
+        return
     }
     if (partialTags.length || partialMarks.length) {
         await respondWithPotentialMatches(res, partialTags, partialMarks);
-    }
-    else {
+    } else {
         sendError(res, 400, ['Bad mark or tag format.']);
+        return;
     }
 }
 
@@ -352,6 +359,11 @@ export const validate = (method) => {
         case 'all':
             return [];
     }
+};
+
+export const isDate = (d) => {
+    console.log("Date", d);
+    return !isNaN(Date.parse(d));
 };
 
 // TODO: If there are multiple valid tags or multiple valid marks, this code
