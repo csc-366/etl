@@ -77,15 +77,15 @@ export async function getPartialIdentifiers(observation) {
 }
 
 
-export async function isValidDate(date) {
+export function isValidDate(date) {
    const observationYear = date.getFullYear();
    const currentYear = new Date().getFullYear();
 
    if (observationYear > currentYear || observationYear < 2017) {
       return false;
    }
-
    return true;
+
 }
 
 
@@ -100,7 +100,7 @@ export async function getSealObservations(sealId) {
    const q = completeQueryString + ` WHERE s.FirstObservation = ${sealId}`;
    const completedObservations = (await query(q))[0];
 
-   return (await combineWithTagsAndMarks(completedObservations))[0];
+   return (await combineWithTagsAndMarks(completedObservations));
 }
 
 export async function insertObservation(obs, submitterName) {

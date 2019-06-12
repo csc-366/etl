@@ -3,7 +3,7 @@ import {query, format} from "./db2";
 const TAG_COLOR_REGEX = /[WBGPVRYO]/;
 const TAG_NUMBER_REGEX = /[A-Z_][0-9_]{1,4}/;
 const TAG_POSITION_REGEX = /(?:R|L)(?:[1-4])-S(?:i|o)/;
-const COMPLETE_TAG_REGEX = /[WBGPVRYO][HPVXDNCUA][0-9]{3}.*(?:R|L)(?:[1-4])-S(?:i|o)/;
+const COMPLETE_TAG_REGEX = /[WBGPVRYO][A-Z][0-9]{3}.*(?:R|L)(?:[1-4])-S(?:i|o)/;
 
 export async function getTag(tagNum) {
    const queryString = "SELECT * From Tag WHERE Number = ?";
