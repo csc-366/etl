@@ -1,6 +1,8 @@
 import {format, query} from "./db2";
 
-export const match = async ()
+export const match = async (observation) => {
+    const {sex, tags, marks} = observation;
+};
 
 export const matchSex = async (sex) => {
     if (!sex) {
@@ -51,12 +53,13 @@ export const matchTags = async (tags) => {
         const tagPositionScores = matchTagPosition(currentTag.position);
         const tagColorScores = matchTagColor(currentTag.color);
 
-        const tagScores = Object.entries(tagNumberScores).reduce((agg, [sealId, score]) => {
+        const tagScoreEntries = Object.entries(tagNumberScores) + Object.entries(tagPositionScores) + Object.entries(tagColorScores);
+
+        const tagScores = tagScoreEntries.reduce((agg, [sealId, score]) => {
+            const updatedScore = (agg[sealId]) ? agg[sealId] + score : score;
             return {
                 ...agg,
-                [sealId]: score +
-                (tagPositionScores[sealId] ? tagPositionScores[sealId] : 0) +
-                (tagColorScores[sealId] ? tagColorScores[sealId] : 0)
+                [sealId]: updatedScore
             }
         }, {});
 
