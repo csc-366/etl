@@ -195,8 +195,7 @@ export async function submitObservation(req, res) {
     }
 
     catch (e) {
-       sendError(res, 500, ["Could not find mark or tag where isNew was" +
-       " listed as false"]);
+       sendError(res, 500, [e.toString()]);
     }
 
 }

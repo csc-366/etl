@@ -38,8 +38,14 @@ export async function insertTags(observationId, tags, sealId) {
    const existingTags = tags.filter(tag => !tag.isNew);
    const newTags = tags.filter(tag => tag.isNew);
 
-   await insertExistingTags(observationId, existingTags);
-   await insertNewTags(observationId, newTags, sealId);
+   try {
+      await insertExistingTags(observationId, existingTags);
+      await insertNewTags(observationId, newTags, sealId);
+   }
+   catch (e) {
+      throw e;
+   }
+
 }
 
 async function insertExistingTags(observationId, existingTags) {
@@ -49,9 +55,14 @@ async function insertExistingTags(observationId, existingTags) {
 }
 
 async function insertNewTags(observationId, newTags, sealId) {
-   for (let i = 0; i < newTags.length; i++) {
-      await createNewTag(newTags[i].number, newTags[i].color, newTags[i].position);
-      await insertTagDeployment(observationId, newTags[i].number, sealId);
+   try {
+      for (let i = 0; i < newTags.length; i++) {
+         await createNewTag(newTags[i].number, newTags[i].color, newTags[i].position);
+         await insertTagDeployment(observationId, newTags[i].number, sealId);
+      }
+   }
+   catch (e) {
+      throw new Error("Tag already exists in database")
    }
 }
 
