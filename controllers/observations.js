@@ -1,11 +1,11 @@
 import {sendData, sendError} from "../utils/responseHelper";
-import {body, validationResult} from 'express-validator/check';
+import {check, body, validationResult} from 'express-validator/check';
 import {
     getPendingObservations,
     getPendingObservationsCount,
     getPendingObservation,
    getCompleteIdentifiers,
-   getObservationsWithFilters,
+   getObservations,
    getPartialIdentifiers,
    getSealObservations,
    insertObservation,
@@ -51,17 +51,14 @@ export async function pending(req, res) {
     sendData(res, pendingList);
 }
 
-export async function getFilteredObservations(req, res) {
+export async function getAllObservations(req, res) {
     const location = req.query.location;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const observer = req.query.observer;
     const ageClass = req.query.ageClass;
 
-    const observations = await getObservationsWithFilters({
-        location,
-        startDate, endDate, observer, ageClass
-    });
+    const observations = await getObservations();
 
     sendData(res, observations)
 }
@@ -82,49 +79,46 @@ export async function count(req, res) {
 export async function validateObservation(req, res) {
    const errors = validationResult(req);
 
+
    if (!errors.isEmpty()) {
       sendError(res, 400, errors.array());
       return;
    }
-
-   try {
-      const date = req.body.date && new Date(req.body.date);
-      const season = date && date.getFullYear();
-
-      let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
-      completeMarks.season = season;
-
-      if (completeTags.length || completeMarks.length) {
-         await respondWithSealMatches(res, completeTags, completeMarks);
-         return;
-      }
-      if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
-         return;
-      }
-
-      if (completeTags.length || completeMarks.length) {
-         await respondWithSealMatches(res, completeTags, completeMarks);
-         return;
-      }
-
-      // check for partially valid observation
-      let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
-      partialMarks.season = season;
-
-      if (partialTags.length || partialMarks.length) {
-         await respondWithPotentialMatches(res, partialTags, partialMarks);
-      } else {
-         sendError(res, 400, 'Invalid observation');
-      }
-      if (partialTags.length || partialMarks.length) {
-         await respondWithPotentialMatches(res, partialTags, partialMarks);
-      } else {
-         sendError(res, 400, ['Bad mark or tag format.']);
-      }
+   if ((req.body.tags && req.body.tags.length < 1)
+    || (req.body.marks && req.body.marks.length < 1)) {
+      sendError(res, 400, ["Must have at least one tag or mark"]);
+      return;
    }
-    catch (e) {
-       sendError(res, 500, [e]);
-    }
+
+
+   const date = req.body.date && new Date(req.body.date);
+   const season = date && date.getFullYear();
+
+   let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
+   completeMarks.season = season;
+
+   if (completeTags.length || completeMarks.length) {
+      await respondWithSealMatches(res, completeTags, completeMarks);
+      return;
+   }
+   if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
+      return;
+   }
+
+   if (completeTags.length || completeMarks.length) {
+      await respondWithSealMatches(res, completeTags, completeMarks);
+      return;
+   }
+
+   // check for partially valid observation
+   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
+   partialMarks.season = season;
+
+   if (partialTags.length || partialMarks.length) {
+      await respondWithPotentialMatches(res, partialTags, partialMarks);
+   } else {
+      sendError(res, 400, ['Bad tag or mark format']);
+   }
 
 }
 
@@ -335,8 +329,17 @@ export const validate = (method) => {
         case 'pendingCount':
             return [];
         case 'validateObservation':
-            return [];
-        case 'getFilteredObservations':
+            return [
+               body('location')
+                 .exists().withMessage("is required")
+                 .isLength({min: 1})
+                 .withMessage("must be at least 1 character long"),
+               body('date')
+                 .exists().withMessage("is required")
+                 .isLength({min: 1})
+                 .withMessage("must be at least 1 character long"),
+            ];
+        case 'getAllObservations':
             return [];
         case 'getFilteredPending':
             return [];
@@ -448,6 +451,4 @@ async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
     }
     return false;
 }
-
-
 

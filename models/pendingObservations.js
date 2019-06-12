@@ -30,6 +30,11 @@ export async function insertPending(pendingObservation) {
    return insertedPending[0].insertId;
 }
 
+export async function removePending(observationId) {
+    await query(format("DELETE FROM PendingObservations WHERE ObservationId" +
+     " = ?", [observationId]));
+}
+
 export async function getPendingWithFilters(filters) {
    let queryString = "SELECT * FROM PendingObservations ";
 
