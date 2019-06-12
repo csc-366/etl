@@ -4,10 +4,11 @@ import {
     validateObservation,
     validate,
     getMeasurements,
-    getFilteredObservations, singlePending, count, pending, all
+    getAllObservations, singlePending, count, pending, all
 } from "../controllers/observations";
 import {
-    getFilteredPending, getPending, pendingCount,
+    convertPending, deletePending,
+    getFilteredPending,
     submitPending
 } from "../controllers/pendingObservations";
 
@@ -28,7 +29,7 @@ observationsRouter.get('/pending', validate('pending'), pending);
 observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
 observationsRouter.get('/pending/:id', validate('singlePending'), singlePending);
 observationsRouter.get('/count', validate('count'), count);
-observationsRouter.get('/filtered', validate('getFilteredObservations'), getFilteredObservations);
+observationsRouter.get('/', validate('getAllObservations'), getAllObservations);
 observationsRouter.get('/:observationId/measurements', validate('getMeasurements'), getMeasurements);
 
 observationsRouter.post('/', validate('submitObservation'), submitObservation);
@@ -42,5 +43,8 @@ observationsRouter.get('/pending/:id', validate('singlePending'), singlePending)
 observationsRouter.get('/pending/filtered', validate('getFilteredPending'), getFilteredPending);
 
 observationsRouter.post('/pending', validate('pending'), submitPending);
+observationsRouter.post('/pending/:pendingId/convert', validate('convertPending'), convertPending);
+
+observationsRouter.delete('/pending', validate('deletePending'), deletePending);
 
 export default observationsRouter;

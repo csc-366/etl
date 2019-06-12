@@ -1,11 +1,11 @@
 import {sendData, sendError} from "../utils/responseHelper";
-import {body, validationResult} from 'express-validator/check';
+import {check, body, validationResult} from 'express-validator/check';
 import {
     getPendingObservations,
     getPendingObservationsCount,
     getPendingObservation,
    getCompleteIdentifiers,
-   getObservationsWithFilters,
+   getObservations,
    getPartialIdentifiers,
    getSealObservations,
    insertObservation,
@@ -51,17 +51,14 @@ export async function pending(req, res) {
     sendData(res, pendingList);
 }
 
-export async function getFilteredObservations(req, res) {
+export async function getAllObservations(req, res) {
     const location = req.query.location;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const observer = req.query.observer;
     const ageClass = req.query.ageClass;
 
-    const observations = await getObservationsWithFilters({
-        location,
-        startDate, endDate, observer, ageClass
-    });
+    const observations = await getObservations();
 
     sendData(res, observations)
 }
@@ -80,55 +77,49 @@ export async function count(req, res) {
 }
 
 export async function validateObservation(req, res) {
-    const errors = validationResult(req);
+   const errors = validationResult(req);
 
-    console.log(req.body);
 
-    if (!errors.isEmpty()) {
-        sendError(res, 400, errors.array());
-        return;
-    }
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+   if ((req.body.tags && req.body.tags.length < 1)
+    || (req.body.marks && req.body.marks.length < 1)) {
+      sendError(res, 400, ["Must have at least one tag or mark"]);
+      return;
+   }
 
-    if (!req.body.data || !req.body.data.date) {
-        sendError(res, 400, "missing values");
-        return;
-    }
 
-    const date = req.body.data.date && new Date(req.body.data.date);
-    const season = date && date.getFullYear();
+   const date = req.body.date && new Date(req.body.date);
+   const season = date && date.getFullYear();
 
-    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body.data);
-    completeMarks.season = season;
+   let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
+   completeMarks.season = season;
 
-    if (completeTags.length || completeMarks.length) {
-        await respondWithSealMatches(res, completeTags, completeMarks);
-        return;
-    }
-    if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
-        return;
-    }
+   if (completeTags.length || completeMarks.length) {
+      await respondWithSealMatches(res, completeTags, completeMarks);
+      return;
+   }
+   if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
+      return;
+   }
 
-    if (completeTags.length || completeMarks.length) {
-        await respondWithSealMatches(res, completeTags, completeMarks);
-        return;
-    }
+   if (completeTags.length || completeMarks.length) {
+      await respondWithSealMatches(res, completeTags, completeMarks);
+      return;
+   }
 
    // check for partially valid observation
-   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body.data);
+   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
    partialMarks.season = season;
 
-    if (partialTags.length || partialMarks.length) {
-        await respondWithPotentialMatches(res, partialTags, partialMarks);
-    } else {
-        sendError(res, 400, 'Invalid observation');
-        return
-    }
-    if (partialTags.length || partialMarks.length) {
-        await respondWithPotentialMatches(res, partialTags, partialMarks);
-    } else {
-        sendError(res, 400, ['Bad mark or tag format.']);
-        return;
-    }
+   if (partialTags.length || partialMarks.length) {
+      await respondWithPotentialMatches(res, partialTags, partialMarks);
+   } else {
+      sendError(res, 400, ['Bad tag or mark format']);
+   }
+
 }
 
 // assumes that error checking by validateObservation has already been done
@@ -146,51 +137,57 @@ export async function submitObservation(req, res) {
         return;
     }
 
-    if (body.observer) {
-        existingObserver = await getObserver(body.observer);
-    }
-    if (!existingObserver && body.observer) {
-        await insertObserver(body.observer);
+    try {
+
+       if (body.observer) {
+          existingObserver = await getObserver(body.observer);
+       }
+       if (!existingObserver && body.observer) {
+          await insertObserver(body.observer);
+       }
+
+       const observationId = await insertObservation(body, req.session.username);
+
+       if (body.tags && body.tags.length) {
+          seal = await getSealFromTag(body.tags[0].number);
+          sealId = seal && seal.FirstObservation;
+       } else if (body.marks && body.marks.length) {
+          seal = await getSealFromMark(body.marks[0].number, season);
+          sealId = seal && seal.FirstObservation;
+       } else {
+          sendError(res, 400, ["Could not add seal to database. No marks or tags" +
+          " found in observation"])
+       }
+
+       if (!seal) {
+          await addNewSeal(observationId, body.sex, body.procedure);
+          sealId = observationId;
+       }
+       if (body.measurement) {
+          await insertMeasurement(observationId, body.measurement);
+       }
+       if (body.pupAge) {
+          await insertPupAge(observationId, body.pupAge);
+       }
+       if (body.pupCount) {
+          await insertPupCount(observationId, body.pupCount);
+       }
+       if (body.marks && body.marks.length) {
+          await insertMarks(observationId, body.marks, season, sealId);
+       }
+       if (body.tags && body.tags.length) {
+          await insertTags(observationId, body.tags, sealId);
+       }
+
+       await insertSealObservation(observationId, sealId);
+       const observations = await getSealObservations(sealId);
+       sendData(res, observations);
     }
 
-    const observationId = await insertObservation(body, req.session.username);
-
-    if (body.tags && body.tags.length) {
-        seal = await getSealFromTag(body.tags[0].number);
-        sealId = seal && seal.FirstObservation;
-    }
-    else if (body.marks && body.marks.length) {
-        seal = await getSealFromMark(body.marks[0].number, season);
-        sealId = seal && seal.FirstObservation;
-    }
-    else {
-        sendError(res, 400, ["Could not add seal to database. No marks or tags" +
-        " found in observation"])
+    catch (e) {
+       sendError(res, 500, [e]);
     }
 
-    if (!seal) {
-        await addNewSeal(observationId, body.sex, body.procedure);
-        sealId = observationId;
-    }
-    if (body.measurement) {
-        await insertMeasurement(observationId, body.measurement);
-    }
-    if (body.pupAge) {
-        await insertPupAge(observationId, body.pupAge);
-    }
-    if (body.pupCount) {
-        await insertPupCount(observationId, body.pupCount);
-    }
-    if (body.marks && body.marks.length) {
-        await insertMarks(observationId, body.marks, season, sealId);
-    }
-    if (body.tags && body.tags.length) {
-        await insertTags(observationId, body.tags, sealId);
-    }
-
-    await insertSealObservation(observationId, sealId);
-    const observations = await getSealObservations(sealId);
-    sendData(res, observations);
 }
 
 
@@ -328,14 +325,29 @@ export const validate = (method) => {
         case 'getPending':
             return [];
         case 'count':
+            return [];
         case 'pendingCount':
             return [];
         case 'validateObservation':
-            return [];
-        case 'getFilteredObservations':
+            return [
+               body('location')
+                 .exists().withMessage("is required")
+                 .isLength({min: 1})
+                 .withMessage("must be at least 1 character long"),
+               body('date')
+                 .exists().withMessage("is required")
+                 .isLength({min: 1})
+                 .withMessage("must be at least 1 character long"),
+            ];
+        case 'getAllObservations':
             return [];
         case 'getFilteredPending':
             return [];
+        case 'convertPending':
+            return [];
+        case 'deletePending':
+            return [];
+
         case 'submitObservation':
             return [
                 body('date')
@@ -359,11 +371,6 @@ export const validate = (method) => {
         case 'all':
             return [];
     }
-};
-
-export const isDate = (d) => {
-    console.log("Date", d);
-    return !isNaN(Date.parse(d));
 };
 
 // TODO: If there are multiple valid tags or multiple valid marks, this code

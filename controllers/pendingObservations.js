@@ -3,7 +3,7 @@ import {sendData, sendError} from "../utils/responseHelper";
 import {
    getPendingWithFilters,
    getSinglePending,
-   insertPending
+   insertPending, removePending
 } from "../models/pendingObservations";
 import {
    getPendingObservation,
@@ -121,6 +121,25 @@ export async function submitPending(req, res) {
 
    const pendingObservation = await getSinglePending(observationId);
    sendData(res, pendingObservation);
+}
+
+export async function deletePending(req, res) {
+   const errors = validationResult(req);
+
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   await removePending(req.params.observationId);
+   sendData(res, [])
+}
+
+export async function convertPending(req, res) {
+
+
+   await removePending(req.params.observationId);
+   sendData(res, [])
 }
 
 function capitalizeFirst(obj) {
