@@ -85,11 +85,7 @@ export async function isValidDate(date) {
       return false;
    }
 
-   const result = (await query(format("SELECT * FROM Season WHERE Year = ?",
-    [observationYear])))[0];
-   const dateRange = result[0];
-
-   return (date > dateRange.Start && date < dateRange.End);
+   return true;
 }
 
 
