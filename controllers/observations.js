@@ -80,48 +80,52 @@ export async function count(req, res) {
 }
 
 export async function validateObservation(req, res) {
-    const errors = validationResult(req);
+   const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-        sendError(res, 400, errors.array());
-        return;
+   if (!errors.isEmpty()) {
+      sendError(res, 400, errors.array());
+      return;
+   }
+
+   try {
+      const date = req.body.date && new Date(req.body.date);
+      const season = date && date.getFullYear();
+
+      let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
+      completeMarks.season = season;
+
+      if (completeTags.length || completeMarks.length) {
+         await respondWithSealMatches(res, completeTags, completeMarks);
+         return;
+      }
+      if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
+         return;
+      }
+
+      if (completeTags.length || completeMarks.length) {
+         await respondWithSealMatches(res, completeTags, completeMarks);
+         return;
+      }
+
+      // check for partially valid observation
+      let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
+      partialMarks.season = season;
+
+      if (partialTags.length || partialMarks.length) {
+         await respondWithPotentialMatches(res, partialTags, partialMarks);
+      } else {
+         sendError(res, 400, 'Invalid observation');
+      }
+      if (partialTags.length || partialMarks.length) {
+         await respondWithPotentialMatches(res, partialTags, partialMarks);
+      } else {
+         sendError(res, 400, ['Bad mark or tag format.']);
+      }
+   }
+    catch (e) {
+       sendError(res, 500, [e]);
     }
 
-    const date = req.body.date && new Date(req.body.date);
-    const season = date && date.getFullYear();
-
-    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
-    completeMarks.season = season;
-
-    if (completeTags.length || completeMarks.length) {
-        await respondWithSealMatches(res, completeTags, completeMarks);
-        return;
-    }
-    if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
-        return;
-    }
-
-    if (completeTags.length || completeMarks.length) {
-        await respondWithSealMatches(res, completeTags, completeMarks);
-        return;
-    }
-
-   // check for partially valid observation
-   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
-   partialMarks.season = season;
-
-    if (partialTags.length || partialMarks.length) {
-        await respondWithPotentialMatches(res, partialTags, partialMarks);
-    }
-    else {
-        sendError(res, 400, 'Invalid observation');
-    }
-    if (partialTags.length || partialMarks.length) {
-        await respondWithPotentialMatches(res, partialTags, partialMarks);
-    }
-    else {
-        sendError(res, 400, ['Bad mark or tag format.']);
-    }
 }
 
 // assumes that error checking by validateObservation has already been done
@@ -139,51 +143,57 @@ export async function submitObservation(req, res) {
         return;
     }
 
-    if (body.observer) {
-        existingObserver = await getObserver(body.observer);
-    }
-    if (!existingObserver && body.observer) {
-        await insertObserver(body.observer);
+    try {
+
+       if (body.observer) {
+          existingObserver = await getObserver(body.observer);
+       }
+       if (!existingObserver && body.observer) {
+          await insertObserver(body.observer);
+       }
+
+       const observationId = await insertObservation(body, req.session.username);
+
+       if (body.tags && body.tags.length) {
+          seal = await getSealFromTag(body.tags[0].number);
+          sealId = seal && seal.FirstObservation;
+       } else if (body.marks && body.marks.length) {
+          seal = await getSealFromMark(body.marks[0].number, season);
+          sealId = seal && seal.FirstObservation;
+       } else {
+          sendError(res, 400, ["Could not add seal to database. No marks or tags" +
+          " found in observation"])
+       }
+
+       if (!seal) {
+          await addNewSeal(observationId, body.sex, body.procedure);
+          sealId = observationId;
+       }
+       if (body.measurement) {
+          await insertMeasurement(observationId, body.measurement);
+       }
+       if (body.pupAge) {
+          await insertPupAge(observationId, body.pupAge);
+       }
+       if (body.pupCount) {
+          await insertPupCount(observationId, body.pupCount);
+       }
+       if (body.marks && body.marks.length) {
+          await insertMarks(observationId, body.marks, season, sealId);
+       }
+       if (body.tags && body.tags.length) {
+          await insertTags(observationId, body.tags, sealId);
+       }
+
+       await insertSealObservation(observationId, sealId);
+       const observations = await getSealObservations(sealId);
+       sendData(res, observations);
     }
 
-    const observationId = await insertObservation(body, req.session.username);
-
-    if (body.tags && body.tags.length) {
-        seal = await getSealFromTag(body.tags[0].number);
-        sealId = seal && seal.FirstObservation;
-    }
-    else if (body.marks && body.marks.length) {
-        seal = await getSealFromMark(body.marks[0].number, season);
-        sealId = seal && seal.FirstObservation;
-    }
-    else {
-        sendError(res, 400, ["Could not add seal to database. No marks or tags" +
-        " found in observation"])
+    catch (e) {
+       sendError(res, 500, [e]);
     }
 
-    if (!seal) {
-        await addNewSeal(observationId, body.sex, body.procedure);
-        sealId = observationId;
-    }
-    if (body.measurement) {
-        await insertMeasurement(observationId, body.measurement);
-    }
-    if (body.pupAge) {
-        await insertPupAge(observationId, body.pupAge);
-    }
-    if (body.pupCount) {
-        await insertPupCount(observationId, body.pupCount);
-    }
-    if (body.marks && body.marks.length) {
-        await insertMarks(observationId, body.marks, season, sealId);
-    }
-    if (body.tags && body.tags.length) {
-        await insertTags(observationId, body.tags, sealId);
-    }
-
-    await insertSealObservation(observationId, sealId);
-    const observations = await getSealObservations(sealId);
-    sendData(res, observations);
 }
 
 
@@ -321,6 +331,7 @@ export const validate = (method) => {
         case 'getPending':
             return [];
         case 'count':
+            return [];
         case 'pendingCount':
             return [];
         case 'validateObservation':
@@ -329,6 +340,11 @@ export const validate = (method) => {
             return [];
         case 'getFilteredPending':
             return [];
+        case 'convertPending':
+            return [];
+        case 'deletePending':
+            return [];
+
         case 'submitObservation':
             return [
                 body('date')
@@ -432,4 +448,6 @@ async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
     }
     return false;
 }
+
+
 
