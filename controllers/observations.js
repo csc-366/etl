@@ -79,11 +79,12 @@ export async function count(req, res) {
 export async function validateObservation(req, res) {
    const errors = validationResult(req);
 
-
    if (!errors.isEmpty()) {
       sendError(res, 400, errors.array());
       return;
    }
+
+   req.body = req.body.data;
    if ((req.body.tags && req.body.tags.length < 1)
     || (req.body.marks && req.body.marks.length < 1)) {
       sendError(res, 400, ["Must have at least one tag or mark"]);
@@ -330,11 +331,11 @@ export const validate = (method) => {
             return [];
         case 'validateObservation':
             return [
-               body('location')
+               body('data.location')
                  .exists().withMessage("is required")
                  .isLength({min: 1})
                  .withMessage("must be at least 1 character long"),
-               body('date')
+               body('data.date')
                  .exists().withMessage("is required")
                  .isLength({min: 1})
                  .withMessage("must be at least 1 character long"),
@@ -434,7 +435,6 @@ async function respondWithPotentialMatches(res, tagNums, markNums) {
 }
 
 async function invalidNewIdentifiers(req, res, completeTags, completeMarks) {
-
     for (let i = 0; i < completeTags.length; i++) {
         let tag = await getTag(completeTags[i]);
         if (tag && req.body.tags[i].isNew) {
