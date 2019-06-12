@@ -23,6 +23,7 @@ import {getMark, insertMarks} from "../models/marks";
 import {getTag, insertTags} from "../models/tags";
 import {getObserver, insertObserver} from "../models/observers";
 import {insertMeasurement, selectMeasurement} from "../models/measurements";
+import {match} from "../models/match";
 
 export async function all(req, res) {
     const errors = validationResult(req);
@@ -95,8 +96,7 @@ export async function validateObservation(req, res) {
    const season = date && date.getFullYear();
 
    if (!isValidDate(date)) {
-      sendError(res, 400, ["Invalid observation: Supplied date is" +
-      " either in the future, or before 2017"]);
+      sendError(res, 400, ["Invalid observation: Supplied date is either in the future, or before 2017"]);
       return;
    }
 
@@ -105,32 +105,9 @@ export async function validateObservation(req, res) {
       return;
    }
 
-   let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
-   completeMarks.season = season;
+   const sealScores = await match(req.body, 10);
 
-   if (completeTags.length || completeMarks.length) {
-      await respondWithSealMatches(res, completeTags, completeMarks);
-      return;
-   }
-   if (await invalidNewIdentifiers(req, res, completeTags, completeMarks)) {
-      return;
-   }
-
-   if (completeTags.length || completeMarks.length) {
-      await respondWithSealMatches(res, completeTags, completeMarks);
-      return;
-   }
-
-   // check for partially valid observation
-   let {partialTags, partialMarks} = await getPartialIdentifiers(req.body);
-   partialMarks.season = season;
-
-   if (partialTags.length || partialMarks.length) {
-      await respondWithPotentialMatches(res, partialTags, partialMarks);
-   } else {
-      sendError(res, 400, ['Bad tag or mark format']);
-   }
-
+   const matchingSeals =
 }
 
 // assumes that error checking by validateObservation has already been done
