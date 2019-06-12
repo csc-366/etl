@@ -1,13 +1,16 @@
 import {format, query} from "./db2";
 
-export const match = async (observation) => {
+export const match = async (observation, count=10) => {
     const {sex, tags, marks} = observation;
     const sexScores = await matchSex(sex);
     const tagScores = await matchTags(tags);
     const markScores = await matchMarks(marks);
 
-    const totalScores = Object.entries(sexScores) + Object.entries(tagScores)  + Object.entries(markScores);
-    return aggregateScoreLists(totalScores);
+    const totalScores = aggregateScoreLists(Object.entries(sexScores) + Object.entries(tagScores)  + Object.entries(markScores));
+
+    const limitedScores = Object.entries(totalScores).sort((a,b) => b[1]-a[1]).map(([sealId]) => sealId).slice(0,count);
+
+    return limitedScores;
 };
 
 export const matchSex = async (sex) => {
@@ -17,11 +20,6 @@ export const matchSex = async (sex) => {
 
     const dbResult = (await query(format("SELECT FirstObservation FROM Seal WHERE Sex = ?", [sex])))[0]
         .reduce((agg, {FirstObservation}) => ({...agg, [FirstObservation]: 1}), {});
-
-    // {}
-    // { 1: 1 }
-    // { 1: 1, 2: 1 }
-    // { 1: 1, 2: 1, 3: 1 }
 
     return dbResult;
 };
