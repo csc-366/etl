@@ -1,15 +1,15 @@
 import {sendData, sendError} from "../utils/responseHelper";
 import {check, body, validationResult} from 'express-validator/check';
 import {
-    getPendingObservations,
-    getPendingObservationsCount,
-    getPendingObservation,
+   getPendingObservations,
+   getPendingObservationsCount,
+   getPendingObservation,
    getCompleteIdentifiers,
    getObservations,
    getPartialIdentifiers,
    getSealObservations,
    insertObservation,
-   insertSealObservation
+   insertSealObservation, isValidDate, isValidLocation
 } from "../models/observations";
 import {
    addNewSeal,
@@ -91,9 +91,19 @@ export async function validateObservation(req, res) {
       return;
    }
 
-
    const date = req.body.date && new Date(req.body.date);
    const season = date && date.getFullYear();
+
+   if (!isValidDate(date)) {
+      sendError(res, 400, ["Invalid observation: Supplied date is" +
+      " either in the future, or before 2017"]);
+      return;
+   }
+
+   if (!isValidLocation(req.body.location)) {
+      sendError(res, 400, [`Unknown location: ${req.body.location}`]);
+      return;
+   }
 
    let {completeTags, completeMarks} = await getCompleteIdentifiers(req.body);
    completeMarks.season = season;
@@ -186,7 +196,7 @@ export async function submitObservation(req, res) {
     }
 
     catch (e) {
-       sendError(res, 500, [e]);
+       sendError(res, 500, [e.toString()]);
     }
 
 }
