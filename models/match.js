@@ -1,9 +1,5 @@
 import {format, query} from "./db2";
 
-export const match = async (observation) => {
-    const {sex, tags, marks} = observation;
-};
-
 export const matchSex = async (sex) => {
     if (!sex) {
         return {}
