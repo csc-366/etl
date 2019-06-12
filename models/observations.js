@@ -1,7 +1,13 @@
-import { query, format, startTransaction, rollback} from './db2';
+import { query, format } from './db2';
 import {getCompleteMark, getPartialMarks, hasNoInvalidMarks} from "./marks";
 import {getCompleteTags, getPartialTags, hasNoInvalidTags} from "./tags";
-import {appendQueryConditions} from "../utils/filtration";
+
+import {
+   completeQueryString,
+   completeTagsString,
+   completeMarksString,
+   groupBy, spreadTags, spreadMarks
+} from '../models/export'
 
 export async function getPendingObservations(count=-1, page=-1) {
    let pendingList;
@@ -95,13 +101,10 @@ export async function isValidLocation(location) {
 }
 
 export async function getSealObservations(sealId) {
-   const queryString =
-    "SELECT O.* From Observation O " +
-      "JOIN SealObservation SO on SO.ObservationID = O.ID " +
-      "JOIN Seal S on S.FirstObservation = SO.SealID " +
-      "WHERE S.FirstObservation = ?";
+   const q = completeQueryString + ` WHERE s.FirstObservation = ${sealId}`;
+   const completedObservations = (await query(q))[0];
 
-   return (await query(format(queryString, [sealId])))[0];
+   return (await combineWithTagsAndMarks(completedObservations))[0];
 }
 
 export async function insertObservation(obs, submitterName) {
@@ -128,11 +131,25 @@ export async function insertSealObservation(observationId, sealId) {
    await query(format(queryString, [observationId, sealId]));
 }
 
-export async function getObservationsWithFilters(filters) {
-   let queryString = "SELECT * FROM Observation ";
+export async function getObservations() {
+   const completedObservations = (await query(completeQueryString))[0];
 
-   let updatedQuery = appendQueryConditions('observations', queryString, filters);
-
-   return (await query(updatedQuery))[0];
+   return (await combineWithTagsAndMarks(completedObservations));
 }
 
+export const combineWithTagsAndMarks = async (completedObservations) => {
+   const completedTags = groupBy((await query(completeTagsString))[0], 'ObservationId');
+   const completedMarks = groupBy((await query(completeMarksString))[0], 'ObservationId');
+   const fullObservations =  completedObservations.map(observation => {
+      let tags = spreadTags(completedTags[observation.ID]);
+      let marks = spreadMarks(completedMarks[observation.ID]);
+      return {
+         ...observation,
+         Date: observation.Date ? new Date(observation.Date).toDateString() : null,
+         FirstSeenAsWeanling: observation.FirstSeenAsWeanling ? new Date(observation.FirstSeenAsWeanling).toDateString() : null,
+         ...marks,
+         ...tags
+      }
+   });
+   return fullObservations;
+};
