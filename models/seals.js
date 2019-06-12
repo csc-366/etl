@@ -1,4 +1,6 @@
 import {query, checkQuery, format} from './db2';
+import { spreadMarks, spreadTags, completeQueryString,
+completeTagsString, completeMarksString} from '../models/export'
 
 export async function addNewSeal(observationId, observation) {
    const sex = (observation.sex === 'M' || observation.sex === 'F') ?
@@ -10,6 +12,40 @@ export async function addNewSeal(observationId, observation) {
 
    await query(format(queryString, [observationId, sex, procedure]));
 }
+
+export async function retrieveSeals(count=-1, page=-1) {
+   let sealList = await query(format("SELECT * FROM Seal" +
+    " LIMIT ?,?", [parseInt(page), parseInt(count)]));
+
+   return sealList[0];
+}
+
+export async function getSealBySealId(sealId) {
+   const queryString =
+    "SELECT * FROM Seal WHERE FirstObservation = ?";
+
+   let seal = (await query(format(queryString, [sealId])))[0];
+
+   if (seal.length) {
+      return seal[0];
+   }
+   return null;
+}
+
+export async function getSealByObservationId(observationId) {
+   const queryString =
+    "SELECT S.* FROM Seal S " +
+    "JOIN SealObservation SO on SO.SealId = S.FirstObservation " +
+    "WHERE SO.ObservationId = ?";
+
+   let seal = (await query(format(queryString, [observationId])))[0];
+
+   if (seal.length) {
+      return seal[0];
+   }
+   return null;
+}
+
 
 export async function getSealFromTag(tagNumber) {
    const queryString =

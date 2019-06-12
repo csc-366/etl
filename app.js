@@ -12,6 +12,7 @@ import etlRouter from './routes/etl';
 import observationRouter from './routes/observations';
 import formOptionsRouter from "./routes/formOptions";
 import exportRouter from './routes/export';
+import sealsRouter from "./routes/seals";
 
 process.title = "SeaQL-backend";
 
@@ -34,6 +35,7 @@ app.use(sessionUtil.router);
 app.use(sessionUtil.checkLogin);
 
 app.use('/', indexRouter);
+app.use('/seals', sealsRouter);
 app.use('/sessions', sessionsRouter);
 app.use('/users', usersRouter);
 app.use('/observations', observationRouter);
